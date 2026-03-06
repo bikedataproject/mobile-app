@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:BDP.App.ViewModels"
+             xmlns:models="clr-namespace:BDP.App.Models"
+             x:Class="BDP.App.Views.RideHistoryPage"
+             x:DataType="vm:RideHistoryViewModel"
+             Title="History">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="0">
+
+        <!-- Header -->
+        <Grid Grid.Row="0"
+              BackgroundColor="#1b2a4e"
+              Padding="16,12"
+              ColumnDefinitions="*,Auto">
+            <Label Text="{Binding PendingCount, StringFormat='{0} pending uploads'}"
+                   TextColor="White" FontSize="14"
+                   VerticalTextAlignment="Center" />
+            <Button Grid.Column="1"
+                    Text="Upload All"
+                    Command="{Binding UploadAllPendingCommand}"
+                    BackgroundColor="#ffc000"
+                    TextColor="#1b2a4e"
+                    FontSize="13"
+                    FontAttributes="Bold"
+                    CornerRadius="8"
+                    HeightRequest="36"
+                    Padding="16,0" />
+        </Grid>
+
+        <!-- Ride list -->
+        <CollectionView Grid.Row="1"
+                         ItemsSource="{Binding Rides}"
+                         SelectionMode="None">
+            <CollectionView.EmptyView>
+                <Label Text="No rides recorded yet."
+                       TextColor="Gray"
+                       HorizontalTextAlignment="Center"
+                       VerticalTextAlignment="Center"
+                       Margin="0,40,0,0" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:RideRecord">
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems>
+                                <SwipeItem Text="Delete"
+                                           BackgroundColor="#e74c3c"
+                                           Command="{Binding Source={RelativeSource AncestorType={x:Type vm:RideHistoryViewModel}}, Path=DeleteRideCommand}"
+                                           CommandParameter="{Binding .}" />
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+
+                        <Frame Margin="16,8" Padding="16" CornerRadius="10" BorderColor="#ddd">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:RideHistoryViewModel}}, Path=OpenRideCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
+
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                <Label Grid.Row="0"
+                                       Text="{Binding StartTime, StringFormat='{0:MMM dd, yyyy HH:mm}'}"
+                                       FontAttributes="Bold" FontSize="16" />
+
+                                <Label Grid.Row="1"
+                                       Text="{Binding DistanceMeters, StringFormat='{0:F0} m  |  '}"
+                                       TextColor="Gray" FontSize="13" />
+
+                                <Label Grid.Row="0" Grid.Column="1"
+                                       Grid.RowSpan="2"
+                                       Text="{Binding IsUploaded, StringFormat='Uploaded: {0}'}"
+                                       TextColor="Gray" FontSize="12"
+                                       VerticalTextAlignment="Center" />
+                            </Grid>
+                        </Frame>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <ActivityIndicator Grid.Row="2"
+                           IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}"
+                           Color="#ffc000"
+                           Margin="0,8" />
+    </Grid>
+</ContentPage>

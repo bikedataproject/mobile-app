@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:BDP.App.ViewModels"
+             x:Class="BDP.App.Views.RecordPage"
+             x:DataType="vm:RecordViewModel"
+             Title="Record">
+
+    <Grid RowDefinitions="*,Auto,Auto">
+
+        <!-- Stats display -->
+        <VerticalStackLayout Grid.Row="0"
+                             VerticalOptions="Center"
+                             HorizontalOptions="Center"
+                             Spacing="20">
+
+            <Label Text="{Binding DistanceKm, StringFormat='{0:F2}'}"
+                   TextColor="#1b2a4e" FontSize="72" FontAttributes="Bold"
+                   HorizontalTextAlignment="Center" />
+            <Label Text="km" TextColor="Gray" FontSize="20"
+                   HorizontalTextAlignment="Center" Margin="0,-15,0,0" />
+
+            <Label Text="{Binding PointCount, StringFormat='{0} GPS points'}"
+                   TextColor="Gray" FontSize="14"
+                   HorizontalTextAlignment="Center" />
+        </VerticalStackLayout>
+
+        <!-- Stats bar -->
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,*"
+              BackgroundColor="#1b2a4e"
+              Padding="16,12">
+
+            <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">
+                <Label Text="{Binding Duration}"
+                       TextColor="#ffc000" FontSize="22" FontAttributes="Bold"
+                       HorizontalTextAlignment="Center" />
+                <Label Text="duration" TextColor="White" FontSize="12"
+                       HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
+                <Label Text="{Binding SpeedKmh, StringFormat='{0:F1}'}"
+                       TextColor="#ffc000" FontSize="22" FontAttributes="Bold"
+                       HorizontalTextAlignment="Center" />
+                <Label Text="km/h" TextColor="White" FontSize="12"
+                       HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <!-- Control buttons -->
+        <Grid Grid.Row="2"
+              ColumnDefinitions="*,*"
+              Padding="16,8,16,16"
+              ColumnSpacing="12"
+              BackgroundColor="#1b2a4e">
+
+            <Button Grid.ColumnSpan="2"
+                    Text="Start Ride"
+                    Command="{Binding StartRideCommand}"
+                    BackgroundColor="#ffc000"
+                    TextColor="#1b2a4e"
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    CornerRadius="12"
+                    HeightRequest="56"
+                    IsVisible="False"
+                    x:Name="StartButton" />
+
+            <Button Grid.Column="0"
+                    Text="Pause"
+                    Command="{Binding PauseRideCommand}"
+                    BackgroundColor="#ff8c00"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    CornerRadius="12"
+                    HeightRequest="56"
+                    IsVisible="False"
+                    x:Name="PauseButton" />
+
+            <Button Grid.Column="1"
+                    Text="Stop"
+                    Command="{Binding StopRideCommand}"
+                    BackgroundColor="#e74c3c"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    CornerRadius="12"
+                    HeightRequest="56"
+                    IsVisible="False"
+                    x:Name="StopButton" />
+
+            <Button Grid.Column="0"
+                    Text="Resume"
+                    Command="{Binding ResumeRideCommand}"
+                    BackgroundColor="#2ecc71"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    CornerRadius="12"
+                    HeightRequest="56"
+                    IsVisible="False"
+                    x:Name="ResumeButton" />
+        </Grid>
+    </Grid>
+</ContentPage>

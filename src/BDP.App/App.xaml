@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="BDP.App.App">
+    <Application.Resources>
+        <ResourceDictionary>
+
+            <toolkit:IsNotNullConverter x:Key="IsNotNullConverter" />
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+
+            <Color x:Key="Primary">#ffc000</Color>
+            <Color x:Key="PrimaryDark">#1b2a4e</Color>
+            <Color x:Key="White">White</Color>
+
+            <Style TargetType="Shell" ApplyToDerivedTypes="True">
+                <Setter Property="Shell.BackgroundColor" Value="{StaticResource PrimaryDark}" />
+                <Setter Property="Shell.ForegroundColor" Value="{StaticResource Primary}" />
+                <Setter Property="Shell.TitleColor" Value="{StaticResource Primary}" />
+                <Setter Property="Shell.TabBarBackgroundColor" Value="{StaticResource PrimaryDark}" />
+                <Setter Property="Shell.TabBarForegroundColor" Value="{StaticResource Primary}" />
+                <Setter Property="Shell.TabBarUnselectedColor" Value="#888888" />
+            </Style>
+
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

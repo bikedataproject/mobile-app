@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:views="clr-namespace:BDP.App.Views"
+       x:Class="BDP.App.AppShell">
+
+    <!-- Login page (no tabs) -->
+    <ShellContent Route="login"
+                  ContentTemplate="{DataTemplate views:LoginPage}"
+                  Shell.TabBarIsVisible="False"
+                  Shell.NavBarIsVisible="False" />
+
+    <!-- Main tab bar -->
+    <TabBar Route="main">
+        <ShellContent Route="record"
+                      Title="Record"
+                      Icon="{OnPlatform Android=ic_record, iOS=record}"
+                      ContentTemplate="{DataTemplate views:RecordPage}" />
+
+        <ShellContent Route="history"
+                      Title="History"
+                      Icon="{OnPlatform Android=ic_history, iOS=history}"
+                      ContentTemplate="{DataTemplate views:RideHistoryPage}" />
+
+        <ShellContent Route="stats"
+                      Title="Stats"
+                      Icon="{OnPlatform Android=ic_stats, iOS=stats}"
+                      ContentTemplate="{DataTemplate views:StatsPage}" />
+    </TabBar>
+
+</Shell>

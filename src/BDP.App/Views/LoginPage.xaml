@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:BDP.App.ViewModels"
+             x:Class="BDP.App.Views.LoginPage"
+             x:DataType="vm:LoginViewModel"
+             Title="Bike Data Project"
+             Shell.NavBarIsVisible="False">
+
+    <Grid BackgroundColor="#1b2a4e"
+          RowDefinitions="*,Auto,Auto,Auto,*"
+          Padding="40">
+
+        <VerticalStackLayout Grid.Row="1"
+                             Spacing="10"
+                             HorizontalOptions="Center">
+            <Label Text="Bike Data Project"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   TextColor="#ffc000"
+                   HorizontalTextAlignment="Center" />
+            <Label Text="Track your rides. Share your data."
+                   FontSize="16"
+                   TextColor="White"
+                   HorizontalTextAlignment="Center" />
+        </VerticalStackLayout>
+
+        <Button Grid.Row="2"
+                Text="Login with Keycloak"
+                Command="{Binding LoginCommand}"
+                BackgroundColor="#ffc000"
+                TextColor="#1b2a4e"
+                FontAttributes="Bold"
+                FontSize="18"
+                CornerRadius="12"
+                HeightRequest="56"
+                Margin="0,40,0,0" />
+
+        <ActivityIndicator Grid.Row="3"
+                           IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}"
+                           Color="#ffc000"
+                           Margin="0,20,0,0" />
+
+        <Label Grid.Row="3"
+               Text="{Binding ErrorMessage}"
+               TextColor="Salmon"
+               HorizontalTextAlignment="Center"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullConverter}}"
+               Margin="0,20,0,0" />
+    </Grid>
+</ContentPage>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:BDP.App.ViewModels"
+             x:Class="BDP.App.Views.RideDetailPage"
+             x:DataType="vm:RideDetailViewModel"
+             Title="Ride Detail">
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="16">
+
+            <Frame BackgroundColor="#1b2a4e" CornerRadius="12" Padding="20">
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,*" RowSpacing="12">
+                    <Label Grid.Row="0" Grid.ColumnSpan="2"
+                           Text="{Binding Ride.StartTime, StringFormat='Ride on {0:MMM dd, yyyy HH:mm}'}"
+                           TextColor="#ffc000" FontSize="18" FontAttributes="Bold" />
+
+                    <VerticalStackLayout Grid.Row="1" Grid.Column="0">
+                        <Label Text="{Binding Ride.DistanceMeters, StringFormat='{0:F0} m'}"
+                               TextColor="White" FontSize="20" FontAttributes="Bold" />
+                        <Label Text="Distance" TextColor="#aaa" FontSize="12" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Row="1" Grid.Column="1">
+                        <Label Text="{Binding Ride.Duration, StringFormat='{0:hh\\:mm\\:ss}'}"
+                               TextColor="White" FontSize="20" FontAttributes="Bold" />
+                        <Label Text="Duration" TextColor="#aaa" FontSize="12" />
+                    </VerticalStackLayout>
+
+                    <Label Grid.Row="2" Grid.ColumnSpan="2"
+                           Text="{Binding Ride.IsUploaded, StringFormat='Uploaded: {0}'}"
+                           TextColor="White" FontSize="14" />
+                </Grid>
+            </Frame>
+
+            <Button Text="Upload Ride"
+                    Command="{Binding UploadRideCommand}"
+                    BackgroundColor="#ffc000"
+                    TextColor="#1b2a4e"
+                    FontAttributes="Bold"
+                    CornerRadius="12"
+                    HeightRequest="50"
+                    IsEnabled="{Binding Ride.IsUploaded, Converter={StaticResource InvertedBoolConverter}}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               Color="#ffc000" />
+
+            <Label Text="{Binding StatusMessage}"
+                   TextColor="#ffc000"
+                   HorizontalTextAlignment="Center"
+                   FontSize="14" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

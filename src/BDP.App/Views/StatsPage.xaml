@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:BDP.App.ViewModels"
+             xmlns:models="clr-namespace:BDP.App.Models"
+             x:Class="BDP.App.Views.StatsPage"
+             x:DataType="vm:StatsViewModel"
+             Title="Stats">
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="16">
+
+            <Frame BackgroundColor="#1b2a4e" CornerRadius="12" Padding="24">
+                <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*" RowSpacing="16">
+                    <VerticalStackLayout Grid.Row="0" Grid.Column="0" HorizontalOptions="Center">
+                        <Label Text="{Binding TotalTracks}"
+                               TextColor="#ffc000" FontSize="36" FontAttributes="Bold"
+                               HorizontalTextAlignment="Center" />
+                        <Label Text="Total Rides" TextColor="White" FontSize="14"
+                               HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Row="0" Grid.Column="1" HorizontalOptions="Center">
+                        <Label Text="{Binding TotalDistanceKm, StringFormat='{0:F0}'}"
+                               TextColor="#ffc000" FontSize="36" FontAttributes="Bold"
+                               HorizontalTextAlignment="Center" />
+                        <Label Text="Total km" TextColor="White" FontSize="14"
+                               HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Frame>
+
+            <Label Text="By Provider"
+                   FontSize="18" FontAttributes="Bold"
+                   Margin="0,8,0,0" />
+
+            <CollectionView ItemsSource="{Binding ByProvider}"
+                             SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <Label Text="No provider data."
+                           TextColor="Gray"
+                           HorizontalTextAlignment="Center" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:ProviderStats">
+                        <Frame Margin="0,4" Padding="16" CornerRadius="8" BorderColor="#ddd">
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="16">
+                                <Label Text="{Binding Provider}"
+                                       FontAttributes="Bold" FontSize="15"
+                                       VerticalTextAlignment="Center" />
+                                <Label Grid.Column="1"
+                                       Text="{Binding Tracks, StringFormat='{0} rides'}"
+                                       TextColor="Gray" FontSize="13"
+                                       VerticalTextAlignment="Center" />
+                                <Label Grid.Column="2"
+                                       Text="{Binding DistanceKm, StringFormat='{0:F0} km'}"
+                                       TextColor="Gray" FontSize="13"
+                                       VerticalTextAlignment="Center" />
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               Color="#ffc000" />
+
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="Salmon"
+                   HorizontalTextAlignment="Center"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullConverter}}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
