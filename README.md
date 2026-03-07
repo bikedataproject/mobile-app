@@ -1,4 +1,7 @@
-# BDP Mobile App
+# Bike Data Project Mobile App
+
+[![Build Android APK](https://github.com/bikedataproject/mobile-app/actions/workflows/build-android.yml/badge.svg)](https://github.com/bikedataproject/mobile-app/actions/workflows/build-android.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/bikedataproject/mobile-app)](https://github.com/bikedataproject/mobile-app/releases/latest)
 
 Mobile app for the [Bike Data Project](https://www.bikedataproject.org) that tracks bike rides via GPS and uploads them to the BDP API.
 
