@@ -14,13 +14,11 @@ public sealed class LocationService : ILocationService
     {
         LastStatus = "Checking permissions...";
 
+        // Request WhenInUse first (required before requesting Always on both platforms)
         var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
-        LastStatus = $"Permission: {status}";
-
         if (status != PermissionStatus.Granted)
         {
             status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
-            LastStatus = $"After request: {status}";
             if (status != PermissionStatus.Granted)
             {
                 LastStatus = $"Permission denied: {status}";
@@ -28,7 +26,18 @@ public sealed class LocationService : ILocationService
             }
         }
 
-        LastStatus = "Permission granted. Starting loop...";
+        // Request Always for background tracking
+        var alwaysStatus = await Permissions.CheckStatusAsync<Permissions.LocationAlways>();
+        if (alwaysStatus != PermissionStatus.Granted)
+        {
+            alwaysStatus = await Permissions.RequestAsync<Permissions.LocationAlways>();
+            LastStatus = $"Background location: {alwaysStatus}";
+            // Continue even if denied — foreground tracking still works
+        }
+
+        LastStatus = "Permission granted. Starting location tracking...";
+
+        StartPlatformForegroundService();
 
         IsTracking = true;
         _cts = new CancellationTokenSource();
@@ -42,6 +51,9 @@ public sealed class LocationService : ILocationService
         _cts?.Cancel();
         _cts?.Dispose();
         _cts = null;
+
+        StopPlatformForegroundService();
+
         LastStatus = "Stopped";
         return Task.CompletedTask;
     }
@@ -105,5 +117,26 @@ public sealed class LocationService : ILocationService
             try { await Task.Delay(TimeSpan.FromSeconds(1), ct); }
             catch (OperationCanceledException) { break; }
         }
+    }
+
+    private static void StartPlatformForegroundService()
+    {
+#if ANDROID
+        var context = Android.App.Application.Context;
+        var intent = new Android.Content.Intent(context, typeof(Platforms.Android.Services.LocationForegroundService));
+        if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.O)
+            context.StartForegroundService(intent);
+        else
+            context.StartService(intent);
+#endif
+    }
+
+    private static void StopPlatformForegroundService()
+    {
+#if ANDROID
+        var context = Android.App.Application.Context;
+        var intent = new Android.Content.Intent(context, typeof(Platforms.Android.Services.LocationForegroundService));
+        context.StopService(intent);
+#endif
     }
 }

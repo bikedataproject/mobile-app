@@ -15,13 +15,6 @@
         android:roundIcon="@mipmap/appicon_round"
         android:supportsRtl="true"
         android:label="Bike Data Project">
-
-        <!-- Foreground service for GPS tracking -->
-        <service
-            android:name=".Services.LocationForegroundService"
-            android:foregroundServiceType="location"
-            android:exported="false" />
-
     </application>
 
     <!-- Auth callback intent filter -->
