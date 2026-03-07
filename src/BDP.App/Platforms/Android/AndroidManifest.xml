@@ -14,7 +14,7 @@
         android:icon="@mipmap/appicon"
         android:roundIcon="@mipmap/appicon_round"
         android:supportsRtl="true"
-        android:label="Bike Data Project">
+        android:label="BDP">
     </application>
 
     <!-- Auth callback intent filter -->

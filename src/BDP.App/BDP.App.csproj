@@ -10,7 +10,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <ApplicationTitle>Bike Data Project</ApplicationTitle>
+    <ApplicationTitle>BDP</ApplicationTitle>
     <ApplicationId>org.bikedataproject.app</ApplicationId>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
