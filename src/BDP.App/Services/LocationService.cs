@@ -4,6 +4,9 @@ namespace BDP.App.Services;
 
 public sealed class LocationService : ILocationService
 {
+    private CancellationTokenSource? _cts;
+    private int _readCount;
+
     public bool IsTracking { get; private set; }
     public string LastStatus { get; private set; } = "Not started";
     public event Action<TrackPoint>? LocationUpdated;
@@ -12,7 +15,6 @@ public sealed class LocationService : ILocationService
     {
         LastStatus = "Checking permissions...";
 
-        // Request WhenInUse first (required before requesting Always on both platforms)
         var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
         if (status != PermissionStatus.Granted)
         {
@@ -24,98 +26,54 @@ public sealed class LocationService : ILocationService
             }
         }
 
-        // Request Always for background tracking
         var alwaysStatus = await Permissions.CheckStatusAsync<Permissions.LocationAlways>();
         if (alwaysStatus != PermissionStatus.Granted)
         {
             alwaysStatus = await Permissions.RequestAsync<Permissions.LocationAlways>();
             LastStatus = $"Background location: {alwaysStatus}";
-            // Continue even if denied — foreground tracking still works
         }
-
-        LastStatus = "Permission granted. Starting GPS...";
 
         StartPlatformForegroundService();
 
-        // Use the continuous location listener — this actively powers on the GPS hardware
-        Geolocation.Default.LocationChanged += OnLocationChanged;
-        Geolocation.Default.ListeningFailed += OnListeningFailed;
-
-        var request = new GeolocationListeningRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(1));
-        var listening = await Geolocation.Default.StartListeningForegroundAsync(request);
-
-        if (!listening)
+        // Activate GPS hardware by starting the listener briefly
+        LastStatus = "Activating GPS...";
+        try
         {
-            // Fallback: use polling loop if listener API is not supported
-            LastStatus = "Listener not supported, falling back to polling...";
-            Geolocation.Default.LocationChanged -= OnLocationChanged;
-            Geolocation.Default.ListeningFailed -= OnListeningFailed;
-            IsTracking = true;
-            _cts = new CancellationTokenSource();
-            _ = PollLoopAsync(_cts.Token);
-            return true;
+            var activated = await Geolocation.Default.StartListeningForegroundAsync(
+                new GeolocationListeningRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(1)));
+            if (activated)
+            {
+                // GPS is now powered on — stop the listener, we'll poll instead
+                Geolocation.Default.StopListeningForeground();
+            }
+        }
+        catch
+        {
+            // Ignore — we'll still try polling
         }
 
         IsTracking = true;
-        _updateCount = 0;
+        _readCount = 0;
+        _cts = new CancellationTokenSource();
+        _ = PollLoopAsync(_cts.Token);
+
         LastStatus = "GPS active, waiting for fix...";
         return true;
     }
 
-    private CancellationTokenSource? _cts;
-    private int _updateCount;
-
     public Task StopAsync()
     {
+        IsTracking = false;
         _cts?.Cancel();
         _cts?.Dispose();
         _cts = null;
 
-        Geolocation.Default.StopListeningForeground();
-        Geolocation.Default.LocationChanged -= OnLocationChanged;
-        Geolocation.Default.ListeningFailed -= OnListeningFailed;
+        try { Geolocation.Default.StopListeningForeground(); } catch { }
 
-        IsTracking = false;
         StopPlatformForegroundService();
 
         LastStatus = "Stopped";
         return Task.CompletedTask;
-    }
-
-    private void OnLocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
-    {
-        _updateCount++;
-        var location = e.Location;
-        LastStatus = $"GPS #{_updateCount}: {location.Latitude:F5},{location.Longitude:F5} acc:{location.Accuracy:F0}m";
-
-        EmitPoint(location);
-    }
-
-    private void OnListeningFailed(object? sender, GeolocationListeningFailedEventArgs e)
-    {
-        LastStatus = $"Listener failed: {e.Error}. Falling back to polling...";
-
-        Geolocation.Default.LocationChanged -= OnLocationChanged;
-        Geolocation.Default.ListeningFailed -= OnListeningFailed;
-
-        // Fallback to polling
-        _cts = new CancellationTokenSource();
-        _ = PollLoopAsync(_cts.Token);
-    }
-
-    private void EmitPoint(Location location)
-    {
-        var point = new TrackPoint
-        {
-            Longitude = location.Longitude,
-            Latitude = location.Latitude,
-            Elevation = location.Altitude,
-            Timestamp = location.Timestamp != default ? location.Timestamp : DateTimeOffset.UtcNow,
-            Accuracy = location.Accuracy ?? double.MaxValue,
-            Speed = location.Speed
-        };
-
-        LocationUpdated?.Invoke(point);
     }
 
     private async Task PollLoopAsync(CancellationToken ct)
@@ -124,24 +82,48 @@ public sealed class LocationService : ILocationService
         {
             try
             {
-                _updateCount++;
+                _readCount++;
                 var request = new GeolocationRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(10));
                 var location = await Geolocation.Default.GetLocationAsync(request, ct);
 
                 if (location is not null)
                 {
-                    LastStatus = $"Poll #{_updateCount}: {location.Latitude:F5},{location.Longitude:F5} acc:{location.Accuracy:F0}m";
-                    EmitPoint(location);
+                    LastStatus = $"GPS #{_readCount}: {location.Latitude:F5},{location.Longitude:F5} acc:{location.Accuracy:F0}m";
+
+                    LocationUpdated?.Invoke(new TrackPoint
+                    {
+                        Longitude = location.Longitude,
+                        Latitude = location.Latitude,
+                        Elevation = location.Altitude,
+                        Timestamp = location.Timestamp != default ? location.Timestamp : DateTimeOffset.UtcNow,
+                        Accuracy = location.Accuracy ?? double.MaxValue,
+                        Speed = location.Speed
+                    });
                 }
                 else
                 {
-                    LastStatus = $"Poll #{_updateCount}: no location";
+                    LastStatus = $"GPS #{_readCount}: no location";
                 }
             }
             catch (OperationCanceledException) { break; }
+            catch (FeatureNotSupportedException)
+            {
+                LastStatus = "GPS not supported on this device";
+                break;
+            }
+            catch (FeatureNotEnabledException)
+            {
+                LastStatus = "GPS is disabled. Enable Location in settings.";
+                break;
+            }
+            catch (PermissionException ex)
+            {
+                LastStatus = $"Permission error: {ex.Message}";
+                break;
+            }
             catch (Exception ex)
             {
-                LastStatus = $"Poll #{_updateCount}: {ex.GetType().Name}: {ex.Message}";
+                LastStatus = $"GPS #{_readCount} error: {ex.GetType().Name}: {ex.Message}";
             }
 
             try { await Task.Delay(TimeSpan.FromSeconds(1), ct); }
