@@ -4,8 +4,6 @@ namespace BDP.App.Services;
 
 public sealed class LocationService : ILocationService
 {
-    private CancellationTokenSource? _cts;
-
     public bool IsTracking { get; private set; }
     public string LastStatus { get; private set; } = "Not started";
     public event Action<TrackPoint>? LocationUpdated;
@@ -35,88 +33,59 @@ public sealed class LocationService : ILocationService
             // Continue even if denied — foreground tracking still works
         }
 
-        LastStatus = "Permission granted. Starting location tracking...";
+        LastStatus = "Permission granted. Starting GPS...";
 
         StartPlatformForegroundService();
 
+        // Use the continuous location listener — this actively powers on the GPS hardware
+        Geolocation.Default.LocationChanged += OnLocationChanged;
+        var listening = await Geolocation.Default.StartListeningForegroundAsync(new GeolocationListeningRequest
+        {
+            DesiredAccuracy = GeolocationAccuracy.Best,
+            MinimumTime = TimeSpan.FromSeconds(1)
+        });
+
+        if (!listening)
+        {
+            LastStatus = "Failed to start location listener";
+            Geolocation.Default.LocationChanged -= OnLocationChanged;
+            StopPlatformForegroundService();
+            return false;
+        }
+
         IsTracking = true;
-        _cts = new CancellationTokenSource();
-        _ = TrackLoopAsync(_cts.Token);
+        LastStatus = "GPS active, waiting for fix...";
         return true;
     }
 
     public Task StopAsync()
     {
-        IsTracking = false;
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = null;
+        Geolocation.Default.StopListeningForeground();
+        Geolocation.Default.LocationChanged -= OnLocationChanged;
 
+        IsTracking = false;
         StopPlatformForegroundService();
 
         LastStatus = "Stopped";
         return Task.CompletedTask;
     }
 
-    private async Task TrackLoopAsync(CancellationToken ct)
+    private void OnLocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
     {
-        var readCount = 0;
-        while (!ct.IsCancellationRequested)
+        var location = e.Location;
+        LastStatus = $"GPS: {location.Latitude:F5},{location.Longitude:F5} acc:{location.Accuracy:F0}m";
+
+        var point = new TrackPoint
         {
-            try
-            {
-                readCount++;
-                LastStatus = $"Reading #{readCount}...";
-                var request = new GeolocationRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(5));
-                var location = await Geolocation.Default.GetLocationAsync(request, ct);
+            Longitude = location.Longitude,
+            Latitude = location.Latitude,
+            Elevation = location.Altitude,
+            Timestamp = location.Timestamp != default ? location.Timestamp : DateTimeOffset.UtcNow,
+            Accuracy = location.Accuracy ?? double.MaxValue,
+            Speed = location.Speed
+        };
 
-                if (location is not null)
-                {
-                    LastStatus = $"Got #{readCount}: {location.Latitude:F5},{location.Longitude:F5} acc:{location.Accuracy:F0}m";
-                    var point = new TrackPoint
-                    {
-                        Longitude = location.Longitude,
-                        Latitude = location.Latitude,
-                        Elevation = location.Altitude,
-                        Timestamp = DateTimeOffset.UtcNow,
-                        Accuracy = location.Accuracy ?? double.MaxValue,
-                        Speed = location.Speed
-                    };
-
-                    LocationUpdated?.Invoke(point);
-                }
-                else
-                {
-                    LastStatus = $"Read #{readCount}: null location returned";
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-            catch (FeatureNotSupportedException)
-            {
-                LastStatus = "GPS not supported on this device";
-                break;
-            }
-            catch (FeatureNotEnabledException)
-            {
-                LastStatus = "GPS is disabled. Enable Location in device settings.";
-                break;
-            }
-            catch (PermissionException ex)
-            {
-                LastStatus = $"Permission error: {ex.Message}";
-                break;
-            }
-            catch (Exception ex)
-            {
-                LastStatus = $"Error #{readCount}: {ex.GetType().Name}: {ex.Message}";
-            }
-
-            try { await Task.Delay(TimeSpan.FromSeconds(1), ct); }
-            catch (OperationCanceledException) { break; }
-        }
+        LocationUpdated?.Invoke(point);
     }
 
     private static void StartPlatformForegroundService()
