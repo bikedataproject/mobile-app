@@ -12,8 +12,10 @@
 
     <ApplicationTitle>BDP</ApplicationTitle>
     <ApplicationId>org.bikedataproject.app</ApplicationId>
-    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion Condition="'$(AppVersion)' == ''">0.1.0</ApplicationDisplayVersion>
+    <ApplicationDisplayVersion Condition="'$(AppVersion)' != ''">$(AppVersion)</ApplicationDisplayVersion>
+    <ApplicationVersion Condition="'$(AppVersionCode)' == ''">1</ApplicationVersion>
+    <ApplicationVersion Condition="'$(AppVersionCode)' != ''">$(AppVersionCode)</ApplicationVersion>
 
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">16.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">26.0</SupportedOSPlatformVersion>
