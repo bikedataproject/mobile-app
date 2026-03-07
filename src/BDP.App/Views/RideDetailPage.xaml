@@ -9,11 +9,11 @@
     <ScrollView Padding="16">
         <VerticalStackLayout Spacing="16">
 
-            <Frame BackgroundColor="#1b2a4e" CornerRadius="12" Padding="20">
+            <Frame BackgroundColor="#212529" CornerRadius="12" Padding="20">
                 <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,*" RowSpacing="12">
                     <Label Grid.Row="0" Grid.ColumnSpan="2"
                            Text="{Binding Ride.StartTime, StringFormat='Ride on {0:MMM dd, yyyy HH:mm}'}"
-                           TextColor="#ffc000" FontSize="18" FontAttributes="Bold" />
+                           TextColor="#ef4823" FontSize="18" FontAttributes="Bold" />
 
                     <VerticalStackLayout Grid.Row="1" Grid.Column="0">
                         <Label Text="{Binding Ride.DistanceMeters, StringFormat='{0:F0} m'}"
@@ -35,8 +35,8 @@
 
             <Button Text="Upload Ride"
                     Command="{Binding UploadRideCommand}"
-                    BackgroundColor="#ffc000"
-                    TextColor="#1b2a4e"
+                    BackgroundColor="#ef4823"
+                    TextColor="White"
                     FontAttributes="Bold"
                     CornerRadius="12"
                     HeightRequest="50"
@@ -44,10 +44,10 @@
 
             <ActivityIndicator IsRunning="{Binding IsBusy}"
                                IsVisible="{Binding IsBusy}"
-                               Color="#ffc000" />
+                               Color="#ef4823" />
 
             <Label Text="{Binding StatusMessage}"
-                   TextColor="#ffc000"
+                   TextColor="#ef4823"
                    HorizontalTextAlignment="Center"
                    FontSize="14" />
 

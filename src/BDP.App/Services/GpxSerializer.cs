@@ -9,47 +9,47 @@ public sealed class GpxSerializer : IGpxSerializer
 {
     public string Serialize(IReadOnlyList<TrackPoint> points, DateTimeOffset startTime)
     {
-        var sb = new StringBuilder();
-        using var writer = XmlWriter.Create(sb, new XmlWriterSettings
+        using var ms = new MemoryStream();
+        using (var writer = XmlWriter.Create(ms, new XmlWriterSettings
         {
             Indent = true,
-            Encoding = Encoding.UTF8,
+            Encoding = new UTF8Encoding(false),
             OmitXmlDeclaration = false
-        });
-
-        writer.WriteStartDocument();
-        writer.WriteStartElement("gpx", "http://www.topografix.com/GPX/1/1");
-        writer.WriteAttributeString("version", "1.1");
-        writer.WriteAttributeString("creator", "BikeDataProject");
-
-        writer.WriteStartElement("trk");
-        writer.WriteElementString("name", $"Ride {startTime:yyyy-MM-ddTHH:mm:ssZ}");
-        writer.WriteElementString("type", "cycling");
-
-        writer.WriteStartElement("trkseg");
-
-        foreach (var pt in points)
+        }))
         {
-            writer.WriteStartElement("trkpt");
-            writer.WriteAttributeString("lat", pt.Latitude.ToString("F7", CultureInfo.InvariantCulture));
-            writer.WriteAttributeString("lon", pt.Longitude.ToString("F7", CultureInfo.InvariantCulture));
+            writer.WriteStartDocument();
+            writer.WriteStartElement("gpx", "http://www.topografix.com/GPX/1/1");
+            writer.WriteAttributeString("version", "1.1");
+            writer.WriteAttributeString("creator", "BikeDataProject");
 
-            if (pt.Elevation.HasValue)
+            writer.WriteStartElement("trk");
+            writer.WriteElementString("name", $"Ride {startTime:yyyy-MM-ddTHH:mm:ssZ}");
+            writer.WriteElementString("type", "cycling");
+
+            writer.WriteStartElement("trkseg");
+
+            foreach (var pt in points)
             {
-                writer.WriteElementString("ele", pt.Elevation.Value.ToString("F1", CultureInfo.InvariantCulture));
+                writer.WriteStartElement("trkpt");
+                writer.WriteAttributeString("lat", pt.Latitude.ToString("F7", CultureInfo.InvariantCulture));
+                writer.WriteAttributeString("lon", pt.Longitude.ToString("F7", CultureInfo.InvariantCulture));
+
+                if (pt.Elevation.HasValue)
+                {
+                    writer.WriteElementString("ele", pt.Elevation.Value.ToString("F1", CultureInfo.InvariantCulture));
+                }
+
+                writer.WriteElementString("time", pt.Timestamp.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture));
+
+                writer.WriteEndElement(); // trkpt
             }
 
-            writer.WriteElementString("time", pt.Timestamp.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture));
-
-            writer.WriteEndElement(); // trkpt
+            writer.WriteEndElement(); // trkseg
+            writer.WriteEndElement(); // trk
+            writer.WriteEndElement(); // gpx
+            writer.WriteEndDocument();
         }
 
-        writer.WriteEndElement(); // trkseg
-        writer.WriteEndElement(); // trk
-        writer.WriteEndElement(); // gpx
-        writer.WriteEndDocument();
-        writer.Flush();
-
-        return sb.ToString();
+        return Encoding.UTF8.GetString(ms.ToArray());
     }
 }

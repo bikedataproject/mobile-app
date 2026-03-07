@@ -15,7 +15,7 @@
                              Spacing="20">
 
             <Label Text="{Binding DistanceKm, StringFormat='{0:F2}'}"
-                   TextColor="#1b2a4e" FontSize="72" FontAttributes="Bold"
+                   TextColor="#212529" FontSize="72" FontAttributes="Bold"
                    HorizontalTextAlignment="Center" />
             <Label Text="km" TextColor="Gray" FontSize="20"
                    HorizontalTextAlignment="Center" Margin="0,-15,0,0" />
@@ -43,12 +43,12 @@
         <!-- Stats bar -->
         <Grid Grid.Row="1"
               ColumnDefinitions="*,*"
-              BackgroundColor="#1b2a4e"
+              BackgroundColor="#212529"
               Padding="16,12">
 
             <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">
                 <Label Text="{Binding Duration}"
-                       TextColor="#ffc000" FontSize="22" FontAttributes="Bold"
+                       TextColor="#ef4823" FontSize="22" FontAttributes="Bold"
                        HorizontalTextAlignment="Center" />
                 <Label Text="duration" TextColor="White" FontSize="12"
                        HorizontalTextAlignment="Center" />
@@ -56,7 +56,7 @@
 
             <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
                 <Label Text="{Binding SpeedKmh, StringFormat='{0:F1}'}"
-                       TextColor="#ffc000" FontSize="22" FontAttributes="Bold"
+                       TextColor="#ef4823" FontSize="22" FontAttributes="Bold"
                        HorizontalTextAlignment="Center" />
                 <Label Text="km/h" TextColor="White" FontSize="12"
                        HorizontalTextAlignment="Center" />
@@ -68,13 +68,13 @@
               ColumnDefinitions="*,*"
               Padding="16,8,16,16"
               ColumnSpacing="12"
-              BackgroundColor="#1b2a4e">
+              BackgroundColor="#212529">
 
             <Button Grid.ColumnSpan="2"
                     Text="Start Ride"
                     Command="{Binding StartRideCommand}"
-                    BackgroundColor="#ffc000"
-                    TextColor="#1b2a4e"
+                    BackgroundColor="#ef4823"
+                    TextColor="White"
                     FontAttributes="Bold"
                     FontSize="20"
                     CornerRadius="12"

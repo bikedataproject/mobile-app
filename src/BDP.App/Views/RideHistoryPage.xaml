@@ -11,7 +11,7 @@
 
         <!-- Header -->
         <Grid Grid.Row="0"
-              BackgroundColor="#1b2a4e"
+              BackgroundColor="#212529"
               Padding="16,12"
               ColumnDefinitions="*,Auto">
             <Label Text="{Binding PendingCount, StringFormat='{0} pending uploads'}"
@@ -20,8 +20,8 @@
             <Button Grid.Column="1"
                     Text="Upload All"
                     Command="{Binding UploadAllPendingCommand}"
-                    BackgroundColor="#ffc000"
-                    TextColor="#1b2a4e"
+                    BackgroundColor="#ef4823"
+                    TextColor="White"
                     FontSize="13"
                     FontAttributes="Bold"
                     CornerRadius="8"
@@ -83,7 +83,7 @@
         <ActivityIndicator Grid.Row="2"
                            IsRunning="{Binding IsBusy}"
                            IsVisible="{Binding IsBusy}"
-                           Color="#ffc000"
+                           Color="#ef4823"
                            Margin="0,8" />
     </Grid>
 </ContentPage>

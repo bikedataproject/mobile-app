@@ -10,21 +10,21 @@
     <ScrollView Padding="16">
         <VerticalStackLayout Spacing="16">
 
-            <Frame BackgroundColor="#1b2a4e" CornerRadius="12" Padding="24">
+            <Frame BackgroundColor="#36469d" CornerRadius="12" Padding="24">
                 <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*" RowSpacing="16">
                     <VerticalStackLayout Grid.Row="0" Grid.Column="0" HorizontalOptions="Center">
                         <Label Text="{Binding TotalTracks}"
-                               TextColor="#ffc000" FontSize="36" FontAttributes="Bold"
+                               TextColor="White" FontSize="36" FontAttributes="Bold"
                                HorizontalTextAlignment="Center" />
-                        <Label Text="Total Rides" TextColor="White" FontSize="14"
+                        <Label Text="Total Rides" TextColor="#ddd" FontSize="14"
                                HorizontalTextAlignment="Center" />
                     </VerticalStackLayout>
 
                     <VerticalStackLayout Grid.Row="0" Grid.Column="1" HorizontalOptions="Center">
                         <Label Text="{Binding TotalDistanceKm, StringFormat='{0:F0}'}"
-                               TextColor="#ffc000" FontSize="36" FontAttributes="Bold"
+                               TextColor="White" FontSize="36" FontAttributes="Bold"
                                HorizontalTextAlignment="Center" />
-                        <Label Text="Total km" TextColor="White" FontSize="14"
+                        <Label Text="Total km" TextColor="#ddd" FontSize="14"
                                HorizontalTextAlignment="Center" />
                     </VerticalStackLayout>
                 </Grid>
@@ -64,7 +64,7 @@
 
             <ActivityIndicator IsRunning="{Binding IsBusy}"
                                IsVisible="{Binding IsBusy}"
-                               Color="#ffc000" />
+                               Color="#ef4823" />
 
             <Label Text="{Binding ErrorMessage}"
                    TextColor="Salmon"

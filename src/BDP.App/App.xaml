@@ -9,8 +9,8 @@
             <toolkit:IsNotNullConverter x:Key="IsNotNullConverter" />
             <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
 
-            <Color x:Key="Primary">#ffc000</Color>
-            <Color x:Key="PrimaryDark">#1b2a4e</Color>
+            <Color x:Key="Primary">#ef4823</Color>
+            <Color x:Key="PrimaryDark">#212529</Color>
             <Color x:Key="White">White</Color>
 
             <Style TargetType="Shell" ApplyToDerivedTypes="True">

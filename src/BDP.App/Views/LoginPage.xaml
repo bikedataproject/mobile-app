@@ -7,7 +7,7 @@
              Title="Bike Data Project"
              Shell.NavBarIsVisible="False">
 
-    <Grid BackgroundColor="#1b2a4e"
+    <Grid BackgroundColor="#212529"
           RowDefinitions="*,Auto,Auto,Auto,*"
           Padding="40">
 
@@ -17,7 +17,7 @@
             <Label Text="Bike Data Project"
                    FontSize="28"
                    FontAttributes="Bold"
-                   TextColor="#ffc000"
+                   TextColor="#ef4823"
                    HorizontalTextAlignment="Center" />
             <Label Text="Track your rides. Share your data."
                    FontSize="16"
@@ -28,8 +28,8 @@
         <Button Grid.Row="2"
                 Text="Login or Register"
                 Command="{Binding LoginCommand}"
-                BackgroundColor="#ffc000"
-                TextColor="#1b2a4e"
+                BackgroundColor="#ef4823"
+                TextColor="White"
                 FontAttributes="Bold"
                 FontSize="18"
                 CornerRadius="12"
@@ -39,7 +39,7 @@
         <ActivityIndicator Grid.Row="3"
                            IsRunning="{Binding IsBusy}"
                            IsVisible="{Binding IsBusy}"
-                           Color="#ffc000"
+                           Color="#ef4823"
                            Margin="0,20,0,0" />
 
         <Label Grid.Row="3"

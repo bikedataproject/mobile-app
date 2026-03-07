@@ -57,23 +57,27 @@ public partial class RideDetailViewModel : ObservableObject
         var fileName = $"ride_{Ride.StartTime:yyyyMMdd_HHmmss}.gpx";
 
         var result = await _api.UploadGpxAsync(gpxXml, fileName);
-        if (result is not null && result.Imported > 0)
+        if (result.Errors.Count > 0)
+        {
+            StatusMessage = $"Upload failed: {string.Join(", ", result.Errors)}";
+        }
+        else if (result.Imported > 0)
         {
             await _db.MarkUploadedAsync(Ride.Id);
             Ride.IsUploaded = true;
             OnPropertyChanged(nameof(Ride));
             StatusMessage = "Uploaded successfully!";
         }
-        else if (result is not null && result.Duplicates > 0)
+        else if (result.Duplicates > 0)
         {
             await _db.MarkUploadedAsync(Ride.Id);
+            Ride.IsUploaded = true;
+            OnPropertyChanged(nameof(Ride));
             StatusMessage = "Already uploaded (duplicate).";
         }
         else
         {
-            StatusMessage = result is not null
-                ? $"Upload failed: {string.Join(", ", result.Errors)}"
-                : "Upload failed. Check your connection.";
+            StatusMessage = "Upload failed: server returned no imports, duplicates, or errors.";
         }
 
         IsBusy = false;

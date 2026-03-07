@@ -48,25 +48,52 @@ public partial class RideHistoryViewModel : ObservableObject
         IsBusy = true;
         var pending = await _db.GetPendingUploadsAsync();
         var uploaded = 0;
+        var errors = new List<string>();
 
         foreach (var ride in pending)
         {
-            var points = JsonSerializer.Deserialize<List<TrackPoint>>(ride.TrackPointsJson) ?? [];
-            if (points.Count < 2) continue;
-
-            var gpxXml = _gpx.Serialize(points, ride.StartTime);
-            var fileName = $"ride_{ride.StartTime:yyyyMMdd_HHmmss}.gpx";
-            var result = await _api.UploadGpxAsync(gpxXml, fileName);
-
-            if (result is not null && (result.Imported > 0 || result.Duplicates > 0))
+            try
             {
-                await _db.MarkUploadedAsync(ride.Id);
-                uploaded++;
+                var points = JsonSerializer.Deserialize<List<TrackPoint>>(ride.TrackPointsJson) ?? [];
+                if (points.Count < 2)
+                {
+                    errors.Add($"Ride {ride.StartTime:MMM dd HH:mm}: too few track points ({points.Count})");
+                    continue;
+                }
+
+                var gpxXml = _gpx.Serialize(points, ride.StartTime);
+                var fileName = $"ride_{ride.StartTime:yyyyMMdd_HHmmss}.gpx";
+                var result = await _api.UploadGpxAsync(gpxXml, fileName);
+
+                if (result.Errors.Count > 0)
+                {
+                    errors.AddRange(result.Errors);
+                }
+                else if (result.Imported > 0 || result.Duplicates > 0)
+                {
+                    await _db.MarkUploadedAsync(ride.Id);
+                    uploaded++;
+                }
+                else
+                {
+                    errors.Add($"Ride {ride.StartTime:MMM dd HH:mm}: server returned 0 imported, 0 duplicates, 0 failed");
+                }
+            }
+            catch (Exception ex)
+            {
+                errors.Add($"Ride {ride.StartTime:MMM dd HH:mm}: {ex.Message}");
             }
         }
 
         await LoadRidesAsync();
-        await Shell.Current.DisplayAlertAsync("Upload Complete", $"Uploaded {uploaded} of {pending.Count} rides.", "OK");
+
+        var message = $"Uploaded {uploaded} of {pending.Count} rides.";
+        if (errors.Count > 0)
+            message += $"\n\nErrors:\n{string.Join("\n", errors)}";
+
+        await Shell.Current.DisplayAlertAsync(
+            uploaded == pending.Count ? "Upload Complete" : "Upload Issues",
+            message, "OK");
         IsBusy = false;
     }
 
