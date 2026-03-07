@@ -67,7 +67,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: BDP-Android-${{ steps.version.outputs.version }}
-          path: ./artifacts/*.apk
+          path: ./artifacts/*-Signed.apk
           if-no-files-found: error
 
       - name: Create GitHub Release
@@ -76,4 +76,4 @@ jobs:
         with:
           name: BDP ${{ github.ref_name }}
           generate_release_notes: true
-          files: ./artifacts/*.apk
+          files: ./artifacts/*-Signed.apk
