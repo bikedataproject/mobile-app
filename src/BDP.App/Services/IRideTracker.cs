@@ -12,6 +12,10 @@ public interface IRideTracker
     TimeSpan Duration { get; }
     double CurrentSpeedKmh { get; }
 
+    string LastGpsStatus { get; }
+    int RawReadingsCount { get; }
+    int FilteredOutCount { get; }
+
     event Action? StateChanged;
     event Action<TrackPoint>? PointAdded;
 

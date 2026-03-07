@@ -23,6 +23,21 @@
             <Label Text="{Binding PointCount, StringFormat='{0} GPS points'}"
                    TextColor="Gray" FontSize="14"
                    HorizontalTextAlignment="Center" />
+
+            <Label Text="{Binding GpsStatus}"
+                   TextColor="#555" FontSize="12"
+                   HorizontalTextAlignment="Center"
+                   Margin="16,0" />
+
+            <Label TextColor="Gray" FontSize="11"
+                   HorizontalTextAlignment="Center">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="{Binding RawReadings, StringFormat='Raw: {0}'}" />
+                        <Span Text="{Binding FilteredOut, StringFormat='  Filtered: {0}'}" />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
         </VerticalStackLayout>
 
         <!-- Stats bar -->

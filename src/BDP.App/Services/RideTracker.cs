@@ -22,6 +22,9 @@ public sealed class RideTracker : IRideTracker
         ? _accumulatedDuration + (DateTimeOffset.UtcNow - _startTime)
         : _accumulatedDuration;
     public double CurrentSpeedKmh { get; private set; }
+    public string LastGpsStatus { get; private set; } = "Waiting for GPS...";
+    public int RawReadingsCount { get; private set; }
+    public int FilteredOutCount { get; private set; }
 
     public event Action? StateChanged;
     public event Action<TrackPoint>? PointAdded;
@@ -37,13 +40,22 @@ public sealed class RideTracker : IRideTracker
         DistanceMeters = 0;
         _accumulatedDuration = TimeSpan.Zero;
         CurrentSpeedKmh = 0;
+        RawReadingsCount = 0;
+        FilteredOutCount = 0;
+        LastGpsStatus = "Waiting for GPS...";
 
         _locationService.LocationUpdated += OnLocationUpdated;
         var started = await _locationService.StartAsync();
-        if (!started) return;
+        if (!started)
+        {
+            LastGpsStatus = $"Location start failed: {_locationService.LastStatus}";
+            _locationService.LocationUpdated -= OnLocationUpdated;
+            return;
+        }
 
         _startTime = DateTimeOffset.UtcNow;
         State = RideState.Recording;
+        LastGpsStatus = _locationService.LastStatus;
         StateChanged?.Invoke();
     }
 
@@ -77,9 +89,6 @@ public sealed class RideTracker : IRideTracker
         await _locationService.StopAsync();
         _locationService.LocationUpdated -= OnLocationUpdated;
 
-        State = RideState.Stopped;
-        StateChanged?.Invoke();
-
         var ride = new RideRecord
         {
             StartTime = _points.Count > 0 ? _points[0].Timestamp : _startTime,
@@ -91,6 +100,7 @@ public sealed class RideTracker : IRideTracker
         };
 
         State = RideState.Idle;
+        StateChanged?.Invoke();
         return ride;
     }
 
@@ -98,11 +108,24 @@ public sealed class RideTracker : IRideTracker
     {
         if (State != RideState.Recording) return;
 
+        RawReadingsCount++;
+        LastGpsStatus = $"GPS: {point.Latitude:F5}, {point.Longitude:F5} acc:{point.Accuracy:F0}m";
+
         // Filter: accuracy
-        if (point.Accuracy > MaxAccuracyMeters) return;
+        if (point.Accuracy > MaxAccuracyMeters)
+        {
+            FilteredOutCount++;
+            LastGpsStatus = $"Filtered: accuracy {point.Accuracy:F0}m > {MaxAccuracyMeters}m";
+            return;
+        }
 
         // Filter: timestamp must be increasing
-        if (_points.Count > 0 && point.Timestamp <= _points[^1].Timestamp) return;
+        if (_points.Count > 0 && point.Timestamp <= _points[^1].Timestamp)
+        {
+            FilteredOutCount++;
+            LastGpsStatus = "Filtered: timestamp not increasing";
+            return;
+        }
 
         if (_points.Count > 0)
         {
@@ -110,14 +133,24 @@ public sealed class RideTracker : IRideTracker
             var dist = HaversineDistance(last.Latitude, last.Longitude, point.Latitude, point.Longitude);
 
             // Filter: minimum distance
-            if (dist < MinDistanceBetweenPointsMeters) return;
+            if (dist < MinDistanceBetweenPointsMeters)
+            {
+                FilteredOutCount++;
+                LastGpsStatus = $"Filtered: moved {dist:F1}m < {MinDistanceBetweenPointsMeters}m";
+                return;
+            }
 
             // Filter: implied speed
             var seconds = (point.Timestamp - last.Timestamp).TotalSeconds;
             if (seconds > 0)
             {
                 var impliedSpeedKmh = (dist / seconds) * 3.6;
-                if (impliedSpeedKmh > MaxSpeedKmh) return;
+                if (impliedSpeedKmh > MaxSpeedKmh)
+                {
+                    FilteredOutCount++;
+                    LastGpsStatus = $"Filtered: speed {impliedSpeedKmh:F0}km/h > {MaxSpeedKmh}km/h";
+                    return;
+                }
 
                 CurrentSpeedKmh = impliedSpeedKmh;
             }
@@ -126,6 +159,7 @@ public sealed class RideTracker : IRideTracker
         }
 
         _points.Add(point);
+        LastGpsStatus = $"Added #{_points.Count}: {point.Latitude:F5}, {point.Longitude:F5} acc:{point.Accuracy:F0}m";
         PointAdded?.Invoke(point);
     }
 

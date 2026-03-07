@@ -9,6 +9,7 @@ public partial class RecordViewModel : ObservableObject, IDisposable
 {
     private readonly IRideTracker _tracker;
     private readonly IDatabaseService _db;
+    private readonly ILocationService _location;
     private IDispatcherTimer? _timer;
 
     [ObservableProperty]
@@ -26,10 +27,20 @@ public partial class RecordViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private int _pointCount;
 
-    public RecordViewModel(IRideTracker tracker, IDatabaseService db)
+    [ObservableProperty]
+    private string _gpsStatus = "Waiting for GPS...";
+
+    [ObservableProperty]
+    private int _rawReadings;
+
+    [ObservableProperty]
+    private int _filteredOut;
+
+    public RecordViewModel(IRideTracker tracker, IDatabaseService db, ILocationService location)
     {
         _tracker = tracker;
         _db = db;
+        _location = location;
         _tracker.StateChanged += OnStateChanged;
         _tracker.PointAdded += OnPointAdded;
     }
@@ -101,6 +112,11 @@ public partial class RecordViewModel : ObservableObject, IDisposable
             Duration = _tracker.Duration.ToString(@"hh\:mm\:ss");
             SpeedKmh = _tracker.CurrentSpeedKmh;
             PointCount = _tracker.Points.Count;
+            GpsStatus = _tracker.RawReadingsCount > 0
+                ? _tracker.LastGpsStatus
+                : $"Location: {_location.LastStatus}";
+            RawReadings = _tracker.RawReadingsCount;
+            FilteredOut = _tracker.FilteredOutCount;
         }
     }
 

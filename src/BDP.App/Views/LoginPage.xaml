@@ -26,7 +26,7 @@
         </VerticalStackLayout>
 
         <Button Grid.Row="2"
-                Text="Login with Keycloak"
+                Text="Login or Register"
                 Command="{Binding LoginCommand}"
                 BackgroundColor="#ffc000"
                 TextColor="#1b2a4e"
