@@ -24,7 +24,7 @@ public sealed class ApiService : IApiService
         if (token is null)
             return new UploadResult { Failed = 1, Errors = ["Authentication failed - no valid token. Try logging out and back in."] };
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, "/manual/upload");
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/manual/upload?source=mobile");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes(gpxContent));
