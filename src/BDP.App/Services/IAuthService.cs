@@ -8,6 +8,8 @@ public interface IAuthService
     string? UserName { get; }
     string? LastError { get; }
 
+    event EventHandler? SessionExpired;
+
     Task<bool> LoginAsync();
     Task LogoutAsync();
     Task<bool> TryRestoreSessionAsync();

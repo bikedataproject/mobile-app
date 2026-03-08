@@ -11,13 +11,15 @@ public sealed class AuthService : IAuthService
     private const string Authority = "https://www.bikedataproject.org/api/users/realms/bdp";
     private const string ClientId = "mobile-app";
     private const string CallbackUri = "org.bikedataproject.app://callback";
-    private const string Scopes = "openid profile email";
+    private const string Scopes = "openid profile email offline_access";
 
     private const string AccessTokenKey = "access_token";
     private const string RefreshTokenKey = "refresh_token";
 
     private string? _accessToken;
     private DateTimeOffset _tokenExpiry;
+
+    public event EventHandler? SessionExpired;
 
     public bool IsLoggedIn => _accessToken is not null;
     public string? AccessToken => _accessToken;
@@ -93,10 +95,22 @@ public sealed class AuthService : IAuthService
             return _accessToken;
 
         var refreshToken = await SecureStorage.Default.GetAsync(RefreshTokenKey);
-        if (string.IsNullOrEmpty(refreshToken)) return null;
+        if (string.IsNullOrEmpty(refreshToken))
+        {
+            await LogoutAsync();
+            SessionExpired?.Invoke(this, EventArgs.Empty);
+            return null;
+        }
 
         var success = await RefreshTokenAsync(refreshToken);
-        return success ? _accessToken : null;
+        if (!success)
+        {
+            await LogoutAsync();
+            SessionExpired?.Invoke(this, EventArgs.Empty);
+            return null;
+        }
+
+        return _accessToken;
     }
 
     private async Task<bool> ExchangeCodeAsync(string code, string codeVerifier)

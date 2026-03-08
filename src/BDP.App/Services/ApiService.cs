@@ -46,6 +46,12 @@ public sealed class ApiService : IApiService
 
         var responseBody = await response.Content.ReadAsStringAsync();
 
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _auth.LogoutAsync();
+            return new UploadResult { Failed = 1, Errors = ["Session expired. Please log in again."] };
+        }
+
         if (!response.IsSuccessStatusCode)
             return new UploadResult { Failed = 1, Errors = [$"HTTP {(int)response.StatusCode}: {responseBody}"] };
 
