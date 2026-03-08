@@ -9,40 +9,36 @@ public partial class RecordViewModel : ObservableObject, IDisposable
 {
     private readonly IRideTracker _tracker;
     private readonly IDatabaseService _db;
-    private readonly ILocationService _location;
+    private readonly UploadService _upload;
     private IDispatcherTimer? _timer;
 
     [ObservableProperty]
-    private RideState _state;
+    private string _statusMessage = "Tap to record your ride";
 
     [ObservableProperty]
-    private double _distanceKm;
+    private string _statusDetail = "";
 
     [ObservableProperty]
-    private string _duration = "00:00:00";
+    private bool _isStatusDetailVisible;
 
     [ObservableProperty]
-    private double _speedKmh;
+    private bool _isRecording;
 
     [ObservableProperty]
-    private int _pointCount;
+    private string _syncMessage = "";
 
     [ObservableProperty]
-    private string _gpsStatus = "Waiting for GPS...";
+    private bool _isSyncVisible;
 
     [ObservableProperty]
-    private int _rawReadings;
+    private string _syncIcon = "";
 
-    [ObservableProperty]
-    private int _filteredOut;
-
-    public RecordViewModel(IRideTracker tracker, IDatabaseService db, ILocationService location)
+    public RecordViewModel(IRideTracker tracker, IDatabaseService db, UploadService upload)
     {
         _tracker = tracker;
         _db = db;
-        _location = location;
-        _tracker.StateChanged += OnStateChanged;
-        _tracker.PointAdded += OnPointAdded;
+        _upload = upload;
+        _upload.SyncStateChanged += OnSyncStateChanged;
     }
 
     public void StartTimer(IDispatcher dispatcher)
@@ -55,75 +51,117 @@ public partial class RecordViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private async Task StartRideAsync()
+    private async Task ToggleRecordingAsync()
     {
+        if (_tracker.State == RideState.Idle)
+        {
+            await StartRecordingAsync();
+        }
+        else if (_tracker.State == RideState.Recording)
+        {
+            await StopRecordingAsync();
+        }
+    }
+
+    private async Task StartRecordingAsync()
+    {
+        IsSyncVisible = false;
+        IsStatusDetailVisible = false;
+        StatusMessage = "Starting GPS...";
         await _tracker.StartAsync();
+
+        if (_tracker.State == RideState.Recording)
+        {
+            IsRecording = true;
+            StatusMessage = "Recording...";
+        }
+        else
+        {
+            StatusMessage = "Could not start GPS.\nTap to try again.";
+        }
     }
 
-    [RelayCommand]
-    private void PauseRide()
-    {
-        _tracker.Pause();
-    }
-
-    [RelayCommand]
-    private async Task ResumeRideAsync()
-    {
-        await _tracker.ResumeAsync();
-    }
-
-    [RelayCommand]
-    private async Task StopRideAsync()
+    private async Task StopRecordingAsync()
     {
         var ride = await _tracker.StopAsync();
+        IsRecording = false;
+        IsStatusDetailVisible = false;
 
-        if (ride.TrackPointsJson == "[]" || PointCount < 2)
+        if (ride.TrackPointsJson == "[]" || _tracker.Points.Count < 2)
         {
-            await Shell.Current.DisplayAlertAsync("Ride Discarded",
-                "Not enough GPS points were recorded. The ride was not saved.", "OK");
-            PointCount = 0;
+            StatusMessage = "Not enough GPS data recorded.\nTap to try again.";
             return;
         }
 
+
+        var distanceKm = ride.DistanceMeters / 1000.0;
+        var duration = ride.Duration.ToString(@"hh\:mm\:ss");
+        StatusMessage = $"Ride saved! {distanceKm:F1} km in {duration}";
+        IsStatusDetailVisible = false;
+
         await _db.SaveRideAsync(ride);
 
-        await Shell.Current.DisplayAlertAsync("Ride Saved",
-            $"Distance: {ride.DistanceMeters / 1000:F2} km\nDuration: {ride.Duration:hh\\:mm\\:ss}", "OK");
-
-        PointCount = 0;
+        // Trigger upload
+        _ = _upload.UploadPendingAsync();
     }
 
-    private void OnStateChanged()
+    private void OnSyncStateChanged(SyncState state)
     {
-        State = _tracker.State;
-        OnPropertyChanged(nameof(State));
-    }
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            // Hide sync status during recording
+            if (IsRecording)
+            {
+                IsSyncVisible = false;
+                return;
+            }
 
-    private void OnPointAdded(TrackPoint point)
-    {
-        PointCount = _tracker.Points.Count;
+            switch (state)
+            {
+                case SyncState.Hidden:
+                    IsSyncVisible = false;
+                    break;
+                case SyncState.Uploading:
+                    IsSyncVisible = true;
+                    SyncIcon = "\u2B6E"; // ⭮ cycle arrow
+                    SyncMessage = "Uploading your ride...";
+                    break;
+                case SyncState.Synced:
+                    IsSyncVisible = true;
+                    SyncIcon = "\u2714"; // ✔
+                    SyncMessage = "All rides synced — thanks for contributing!";
+                    StatusMessage = "Tap to record your next ride";
+                    break;
+                case SyncState.Failed:
+                    IsSyncVisible = true;
+                    SyncIcon = "\u26A0"; // ⚠
+                    SyncMessage = "Upload failed, will retry automatically";
+                    StatusMessage = "Tap to record your next ride";
+                    break;
+            }
+        });
     }
 
     private void UpdateDisplay()
     {
-        if (_tracker.State is RideState.Recording or RideState.Paused)
-        {
-            DistanceKm = _tracker.DistanceMeters / 1000.0;
-            Duration = _tracker.Duration.ToString(@"hh\:mm\:ss");
-            SpeedKmh = _tracker.CurrentSpeedKmh;
-            PointCount = _tracker.Points.Count;
-            GpsStatus = _tracker.RawReadingsCount > 0
-                ? _tracker.LastGpsStatus
-                : $"Location: {_location.LastStatus}";
-            RawReadings = _tracker.RawReadingsCount;
-            FilteredOut = _tracker.FilteredOutCount;
-        }
+        if (_tracker.State != RideState.Recording) return;
+
+        var distanceM = _tracker.DistanceMeters;
+        var distance = distanceM >= 1000
+            ? $"{distanceM / 1000.0:F2} km"
+            : $"{distanceM:F0} m";
+
+        var duration = _tracker.Duration.ToString(@"hh\:mm\:ss");
+        StatusMessage = $"{distance} | {duration}";
+
+        var lastPoint = _tracker.Points.Count > 0 ? _tracker.Points[^1] : null;
+        StatusDetail = lastPoint is not null ? $"GPS accuracy: \u00B1{lastPoint.Accuracy:F0}m" : "Waiting for GPS...";
+        IsStatusDetailVisible = true;
     }
 
     public void Dispose()
     {
         _timer?.Stop();
-        _tracker.StateChanged -= OnStateChanged;
-        _tracker.PointAdded -= OnPointAdded;
+        _upload.SyncStateChanged -= OnSyncStateChanged;
     }
 }

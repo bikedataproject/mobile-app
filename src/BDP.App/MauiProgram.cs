@@ -27,20 +27,15 @@ public static class MauiProgram
         builder.Services.AddSingleton<IApiService, ApiService>();
         builder.Services.AddSingleton<ILocationService, LocationService>();
         builder.Services.AddSingleton<IRideTracker, RideTracker>();
+        builder.Services.AddSingleton<UploadService>();
 
         // ViewModels
         builder.Services.AddTransient<LoginViewModel>();
         builder.Services.AddSingleton<RecordViewModel>();
-        builder.Services.AddTransient<RideDetailViewModel>();
-        builder.Services.AddTransient<RideHistoryViewModel>();
-        builder.Services.AddTransient<StatsViewModel>();
 
         // Pages
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddSingleton<RecordPage>();
-        builder.Services.AddTransient<RideDetailPage>();
-        builder.Services.AddTransient<RideHistoryPage>();
-        builder.Services.AddTransient<StatsPage>();
 
         return builder.Build();
     }

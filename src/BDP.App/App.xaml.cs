@@ -4,9 +4,12 @@ namespace BDP.App;
 
 public partial class App : Application
 {
-    public App(IAuthService auth)
+    private readonly UploadService _upload;
+
+    public App(IAuthService auth, UploadService upload)
     {
         InitializeComponent();
+        _upload = upload;
 
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
@@ -20,6 +23,9 @@ public partial class App : Application
         };
 
         auth.SessionExpired += OnSessionExpired;
+
+        // Start periodic upload retry (also uploads any rides that failed previously)
+        _upload.Start();
     }
 
     private async void OnSessionExpired(object? sender, EventArgs e)

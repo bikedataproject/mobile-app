@@ -10,22 +10,10 @@
                   Shell.TabBarIsVisible="False"
                   Shell.NavBarIsVisible="False" />
 
-    <!-- Main tab bar -->
-    <TabBar Route="main">
-        <ShellContent Route="record"
-                      Title="Record"
-                      Icon="{OnPlatform Android=ic_record, iOS=record}"
-                      ContentTemplate="{DataTemplate views:RecordPage}" />
-
-        <ShellContent Route="history"
-                      Title="History"
-                      Icon="{OnPlatform Android=ic_history, iOS=history}"
-                      ContentTemplate="{DataTemplate views:RideHistoryPage}" />
-
-        <ShellContent Route="stats"
-                      Title="Stats"
-                      Icon="{OnPlatform Android=ic_stats, iOS=stats}"
-                      ContentTemplate="{DataTemplate views:StatsPage}" />
-    </TabBar>
+    <!-- Main (single page, no tabs) -->
+    <ShellContent Route="record"
+                  ContentTemplate="{DataTemplate views:RecordPage}"
+                  Shell.TabBarIsVisible="False"
+                  Shell.NavBarIsVisible="False" />
 
 </Shell>

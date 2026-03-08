@@ -1,4 +1,3 @@
-using BDP.App.Services;
 using BDP.App.ViewModels;
 
 namespace BDP.App.Views;
@@ -11,14 +10,6 @@ public partial class RecordPage : ContentPage
     {
         InitializeComponent();
         BindingContext = _vm = vm;
-
-        _vm.PropertyChanged += (_, e) =>
-        {
-            if (e.PropertyName == nameof(RecordViewModel.State))
-                UpdateButtonVisibility();
-        };
-
-        UpdateButtonVisibility();
     }
 
     protected override void OnAppearing()
@@ -27,15 +18,8 @@ public partial class RecordPage : ContentPage
         _vm.StartTimer(Dispatcher);
     }
 
-    private void UpdateButtonVisibility()
+    private async void OnStatsLinkTapped(object? sender, EventArgs e)
     {
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            var state = _vm.State;
-            StartButton.IsVisible = state == RideState.Idle;
-            PauseButton.IsVisible = state == RideState.Recording;
-            StopButton.IsVisible = state is RideState.Recording or RideState.Paused;
-            ResumeButton.IsVisible = state == RideState.Paused;
-        });
+        await Launcher.Default.OpenAsync("https://www.bikedataproject.org/share-data");
     }
 }

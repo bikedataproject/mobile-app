@@ -2,118 +2,112 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:BDP.App.ViewModels"
+             xmlns:conv="clr-namespace:BDP.App.Converters"
              x:Class="BDP.App.Views.RecordPage"
              x:DataType="vm:RecordViewModel"
-             Title="Record">
+             BackgroundColor="#212529"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False">
 
-    <Grid RowDefinitions="*,Auto,Auto">
+    <ContentPage.Resources>
+        <conv:InvertBoolConverter x:Key="InvertBool" />
+    </ContentPage.Resources>
 
-        <!-- Stats display -->
+    <Grid RowDefinitions="Auto,*,Auto"
+          Padding="32,0">
+
+        <!-- Top: bicycle logo + title -->
         <VerticalStackLayout Grid.Row="0"
-                             VerticalOptions="Center"
                              HorizontalOptions="Center"
-                             Spacing="20">
-
-            <Label Text="{Binding DistanceKm, StringFormat='{0:F2}'}"
-                   TextColor="#212529" FontSize="72" FontAttributes="Bold"
+                             Spacing="12"
+                             Margin="0,60,0,0">
+            <Image Source="bicycle.png"
+                   HeightRequest="90"
+                   HorizontalOptions="Center" />
+            <Label Text="Bike Data Project"
+                   TextColor="White"
+                   FontSize="28"
+                   FontAttributes="Bold"
                    HorizontalTextAlignment="Center" />
-            <Label Text="km" TextColor="Gray" FontSize="20"
-                   HorizontalTextAlignment="Center" Margin="0,-15,0,0" />
-
-            <Label Text="{Binding PointCount, StringFormat='{0} GPS points'}"
-                   TextColor="Gray" FontSize="14"
-                   HorizontalTextAlignment="Center" />
-
-            <Label Text="{Binding GpsStatus}"
-                   TextColor="#555" FontSize="12"
-                   HorizontalTextAlignment="Center"
-                   Margin="16,0" />
-
-            <Label TextColor="Gray" FontSize="11"
-                   HorizontalTextAlignment="Center">
-                <Label.FormattedText>
-                    <FormattedString>
-                        <Span Text="{Binding RawReadings, StringFormat='Raw: {0}'}" />
-                        <Span Text="{Binding FilteredOut, StringFormat='  Filtered: {0}'}" />
-                    </FormattedString>
-                </Label.FormattedText>
-            </Label>
         </VerticalStackLayout>
 
-        <!-- Stats bar -->
+        <!-- Center: big round record/stop button with shadow -->
         <Grid Grid.Row="1"
-              ColumnDefinitions="*,*"
-              BackgroundColor="#212529"
-              Padding="16,12">
+              HorizontalOptions="Center" VerticalOptions="Center">
 
-            <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">
-                <Label Text="{Binding Duration}"
-                       TextColor="#ef4823" FontSize="22" FontAttributes="Bold"
-                       HorizontalTextAlignment="Center" />
-                <Label Text="duration" TextColor="White" FontSize="12"
-                       HorizontalTextAlignment="Center" />
-            </VerticalStackLayout>
-
-            <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
-                <Label Text="{Binding SpeedKmh, StringFormat='{0:F1}'}"
-                       TextColor="#ef4823" FontSize="22" FontAttributes="Bold"
-                       HorizontalTextAlignment="Center" />
-                <Label Text="km/h" TextColor="White" FontSize="12"
-                       HorizontalTextAlignment="Center" />
-            </VerticalStackLayout>
-        </Grid>
-
-        <!-- Control buttons -->
-        <Grid Grid.Row="2"
-              ColumnDefinitions="*,*"
-              Padding="16,8,16,16"
-              ColumnSpacing="12"
-              BackgroundColor="#212529">
-
-            <Button Grid.ColumnSpan="2"
-                    Text="Start Ride"
-                    Command="{Binding StartRideCommand}"
+            <Button Command="{Binding ToggleRecordingCommand}"
+                    WidthRequest="200"
+                    HeightRequest="200"
+                    CornerRadius="100"
                     BackgroundColor="#ef4823"
-                    TextColor="White"
-                    FontAttributes="Bold"
-                    FontSize="20"
-                    CornerRadius="12"
-                    HeightRequest="56"
-                    IsVisible="False"
-                    x:Name="StartButton" />
+                    BorderWidth="0"
+                    Shadow="{Shadow Brush=#99000000, Offset='0,8', Radius=32, Opacity=0.6}" />
 
-            <Button Grid.Column="0"
-                    Text="Pause"
-                    Command="{Binding PauseRideCommand}"
-                    BackgroundColor="#ff8c00"
-                    TextColor="White"
-                    FontAttributes="Bold"
-                    CornerRadius="12"
-                    HeightRequest="56"
-                    IsVisible="False"
-                    x:Name="PauseButton" />
+            <!-- Record icon (filled circle) - visible when idle -->
+            <Ellipse Fill="White"
+                     WidthRequest="60" HeightRequest="60"
+                     HorizontalOptions="Center" VerticalOptions="Center"
+                     InputTransparent="True"
+                     IsVisible="{Binding IsRecording, Converter={StaticResource InvertBool}}" />
 
-            <Button Grid.Column="1"
-                    Text="Stop"
-                    Command="{Binding StopRideCommand}"
-                    BackgroundColor="#e74c3c"
-                    TextColor="White"
-                    FontAttributes="Bold"
-                    CornerRadius="12"
-                    HeightRequest="56"
-                    IsVisible="False"
-                    x:Name="StopButton" />
-
-            <Button Grid.Column="0"
-                    Text="Resume"
-                    Command="{Binding ResumeRideCommand}"
-                    BackgroundColor="#2ecc71"
-                    TextColor="White"
-                    FontAttributes="Bold"
-                    CornerRadius="12"
-                    HeightRequest="56"
-                    IsVisible="False"
-                    x:Name="ResumeButton" />
+            <!-- Stop icon (rounded square) - visible when recording -->
+            <BoxView Color="White"
+                     WidthRequest="56" HeightRequest="56"
+                     CornerRadius="10"
+                     HorizontalOptions="Center" VerticalOptions="Center"
+                     InputTransparent="True"
+                     IsVisible="{Binding IsRecording}" />
         </Grid>
+
+        <!-- Bottom: status label + sync status -->
+        <VerticalStackLayout Grid.Row="2"
+                             HorizontalOptions="Center"
+                             Spacing="10"
+                             Margin="0,0,0,48">
+
+            <!-- Status label -->
+            <Label Text="{Binding StatusMessage}"
+                   TextColor="White"
+                   FontSize="18"
+                   HorizontalTextAlignment="Center"
+                   LineBreakMode="WordWrap"
+                   MaximumWidthRequest="280" />
+
+            <!-- Status detail (GPS accuracy) -->
+            <Label Text="{Binding StatusDetail}"
+                   TextColor="#999"
+                   FontSize="13"
+                   HorizontalTextAlignment="Center"
+                   IsVisible="{Binding IsStatusDetailVisible}" />
+
+            <!-- Sync status -->
+            <HorizontalStackLayout HorizontalOptions="Center"
+                                    Spacing="8"
+                                    IsVisible="{Binding IsSyncVisible}">
+                <Label Text="{Binding SyncIcon}"
+                       FontSize="14"
+                       TextColor="#999"
+                       VerticalTextAlignment="Center" />
+                <Label Text="{Binding SyncMessage}"
+                       TextColor="#999"
+                       FontSize="13"
+                       VerticalTextAlignment="Center" />
+            </HorizontalStackLayout>
+
+            <!-- Website link -->
+            <Label IsVisible="{Binding IsSyncVisible}"
+                   TextColor="#ef4823"
+                   FontSize="13"
+                   HorizontalTextAlignment="Center"
+                   TextDecorations="Underline"
+                   x:Name="StatsLink">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnStatsLinkTapped" />
+                </Label.GestureRecognizers>
+                <Label.Text>View your stats on bikedataproject.org</Label.Text>
+            </Label>
+
+        </VerticalStackLayout>
+
     </Grid>
 </ContentPage>
