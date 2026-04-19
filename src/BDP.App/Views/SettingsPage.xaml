@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:BDP.App.ViewModels"
+             x:Class="BDP.App.Views.SettingsPage"
+             x:DataType="vm:SettingsViewModel"
+             BackgroundColor="#212529"
+             Title="Settings">
+
+    <ScrollView Padding="24,16">
+        <VerticalStackLayout Spacing="20">
+
+            <!-- Header -->
+            <Label Text="Settings"
+                   TextColor="White"
+                   FontSize="28"
+                   FontAttributes="Bold" />
+
+            <!-- Auto-Detection Section -->
+            <Frame BackgroundColor="#2d3238"
+                   BorderColor="Transparent"
+                   CornerRadius="12"
+                   Padding="16">
+                <VerticalStackLayout Spacing="16">
+
+                    <Label Text="Auto Ride Detection"
+                           TextColor="White"
+                           FontSize="18"
+                           FontAttributes="Bold" />
+
+                    <Label Text="Automatically detect and record your bike rides without tapping any buttons."
+                           TextColor="#aaa"
+                           FontSize="14"
+                           LineBreakMode="WordWrap" />
+
+                    <!-- Enable toggle -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Enable auto-detection"
+                               TextColor="White"
+                               FontSize="16"
+                               VerticalTextAlignment="Center" />
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding AutoDetectionEnabled}"
+                                IsEnabled="{Binding AutoDetectionAvailable}"
+                                OnColor="#ef4823"
+                                ThumbColor="White" />
+                    </Grid>
+
+                    <!-- Status message -->
+                    <Label Text="{Binding StatusMessage}"
+                           TextColor="#999"
+                           FontSize="13" />
+
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Sensitivity Section (only visible when enabled) -->
+            <Frame BackgroundColor="#2d3238"
+                   BorderColor="Transparent"
+                   CornerRadius="12"
+                   Padding="16"
+                   IsVisible="{Binding AutoDetectionEnabled}">
+                <VerticalStackLayout Spacing="16">
+
+                    <Label Text="Detection Sensitivity"
+                           TextColor="White"
+                           FontSize="18"
+                           FontAttributes="Bold" />
+
+                    <!-- Aggressive mode toggle -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="Aggressive mode"
+                                   TextColor="White"
+                                   FontSize="16" />
+                            <Label Text="Shorter confirmation (45s vs 90s), lower speed threshold"
+                                   TextColor="#999"
+                                   FontSize="12" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding IsAggressive}"
+                                OnColor="#ef4823"
+                                ThumbColor="White" />
+                    </Grid>
+
+                    <!-- Min ride distance -->
+                    <VerticalStackLayout Spacing="4">
+                        <Label TextColor="White"
+                               FontSize="16">
+                            <Label.Text>
+                                <MultiBinding StringFormat="Minimum ride distance: {0}m">
+                                    <Binding Path="MinRideDistanceMeters" />
+                                </MultiBinding>
+                            </Label.Text>
+                        </Label>
+                        <Slider Minimum="100"
+                                Maximum="1000"
+                                Value="{Binding MinRideDistanceMeters}"
+                                MinimumTrackColor="#ef4823"
+                                MaximumTrackColor="#555"
+                                ThumbColor="#ef4823" />
+                        <Grid ColumnDefinitions="*,*">
+                            <Label Text="100m"
+                                   TextColor="#999"
+                                   FontSize="11" />
+                            <Label Grid.Column="1"
+                                   Text="1000m"
+                                   TextColor="#999"
+                                   FontSize="11"
+                                   HorizontalTextAlignment="End" />
+                        </Grid>
+                    </VerticalStackLayout>
+
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Battery guidance -->
+            <Frame BackgroundColor="#2d3238"
+                   BorderColor="Transparent"
+                   CornerRadius="12"
+                   Padding="16"
+                   IsVisible="{Binding AutoDetectionEnabled}">
+                <VerticalStackLayout Spacing="12">
+
+                    <Label Text="Battery Optimization"
+                           TextColor="White"
+                           FontSize="18"
+                           FontAttributes="Bold" />
+
+                    <Label Text="Some phone manufacturers aggressively kill background apps. If auto-detection stops working, you may need to adjust your battery settings."
+                           TextColor="#aaa"
+                           FontSize="14"
+                           LineBreakMode="WordWrap" />
+
+                    <Button Text="Open battery settings guide"
+                            Command="{Binding OpenBatterySettingsCommand}"
+                            BackgroundColor="#ef4823"
+                            TextColor="White"
+                            CornerRadius="8"
+                            HeightRequest="44"
+                            FontSize="14" />
+
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Back button -->
+            <Button Text="Back"
+                    Clicked="OnBackClicked"
+                    BackgroundColor="Transparent"
+                    TextColor="#ef4823"
+                    FontSize="16"
+                    BorderWidth="1"
+                    BorderColor="#ef4823"
+                    CornerRadius="8"
+                    HeightRequest="44"
+                    Margin="0,8,0,24" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

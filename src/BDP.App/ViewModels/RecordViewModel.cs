@@ -10,7 +10,9 @@ public partial class RecordViewModel : ObservableObject, IDisposable
     private readonly IRideTracker _tracker;
     private readonly IDatabaseService _db;
     private readonly UploadService _upload;
+    private readonly AutoRideDetectionService _autoDetection;
     private IDispatcherTimer? _timer;
+    private bool _isAutoRecording;
 
     [ObservableProperty]
     private string _statusMessage = "Tap to record your ride";
@@ -33,12 +35,26 @@ public partial class RecordViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string _syncIcon = "";
 
-    public RecordViewModel(IRideTracker tracker, IDatabaseService db, UploadService upload)
+    [ObservableProperty]
+    private bool _isAutoDetectionStatusVisible;
+
+    [ObservableProperty]
+    private string _autoDetectionStatusText = "";
+
+    [ObservableProperty]
+    private Microsoft.Maui.Graphics.Color _autoDetectionDotColor = Colors.Gray;
+
+    public RecordViewModel(IRideTracker tracker, IDatabaseService db, UploadService upload, AutoRideDetectionService autoDetection)
     {
         _tracker = tracker;
         _db = db;
         _upload = upload;
+        _autoDetection = autoDetection;
         _upload.SyncStateChanged += OnSyncStateChanged;
+        _autoDetection.StateChanged += OnAutoDetectionStateChanged;
+        _autoDetection.StatusMessage += OnAutoDetectionStatusMessage;
+
+        UpdateAutoDetectionDisplay();
     }
 
     public void StartTimer(IDispatcher dispatcher)
@@ -53,6 +69,13 @@ public partial class RecordViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task ToggleRecordingAsync()
     {
+        // If auto-recording is active, user tapping stop ends the auto-ride
+        if (_isAutoRecording)
+        {
+            await StopAutoRecordingAsync();
+            return;
+        }
+
         if (_tracker.State == RideState.Idle)
         {
             await StartRecordingAsync();
@@ -65,6 +88,9 @@ public partial class RecordViewModel : ObservableObject, IDisposable
 
     private async Task StartRecordingAsync()
     {
+        // Pause auto-detection during manual recording
+        _autoDetection.OnManualRecordingStarted();
+
         IsSyncVisible = false;
         IsStatusDetailVisible = false;
         StatusMessage = "Starting GPS...";
@@ -78,6 +104,7 @@ public partial class RecordViewModel : ObservableObject, IDisposable
         else
         {
             StatusMessage = "Could not start GPS.\nTap to try again.";
+            _autoDetection.OnManualRecordingStopped();
         }
     }
 
@@ -87,13 +114,16 @@ public partial class RecordViewModel : ObservableObject, IDisposable
         IsRecording = false;
         IsStatusDetailVisible = false;
 
+        // Resume auto-detection
+        _autoDetection.OnManualRecordingStopped();
+
         if (ride.TrackPointsJson == "[]" || _tracker.Points.Count < 2)
         {
             StatusMessage = "Not enough GPS data recorded.\nTap to try again.";
             return;
         }
 
-
+        ride.Source = "manual";
         var distanceKm = ride.DistanceMeters / 1000.0;
         var duration = ride.Duration.ToString(@"hh\:mm\:ss");
         StatusMessage = $"Ride saved! {distanceKm:F1} km in {duration}";
@@ -103,6 +133,23 @@ public partial class RecordViewModel : ObservableObject, IDisposable
 
         // Trigger upload
         _ = _upload.UploadPendingAsync();
+    }
+
+    private async Task StopAutoRecordingAsync()
+    {
+        // Force-finalize the auto-recorded ride
+        await _autoDetection.DisableAsync();
+        _isAutoRecording = false;
+        IsRecording = false;
+        IsStatusDetailVisible = false;
+        StatusMessage = "Auto-recorded ride saved";
+
+        // Re-enable if it was previously on
+        var prefs = new PreferencesService();
+        if (prefs.AutoDetectionEnabled)
+        {
+            _ = _autoDetection.EnableAsync();
+        }
     }
 
     private void OnSyncStateChanged(SyncState state)
@@ -144,24 +191,110 @@ public partial class RecordViewModel : ObservableObject, IDisposable
 
     private void UpdateDisplay()
     {
+        // Handle auto-recording display
+        if (_isAutoRecording && _autoDetection.State is AutoDetectionState.Recording or AutoDetectionState.Finalizing)
+        {
+            var distanceM = _autoDetection.DistanceMeters;
+            var distance = distanceM >= 1000
+                ? $"{distanceM / 1000.0:F2} km"
+                : $"{distanceM:F0} m";
+
+            var duration = _autoDetection.Duration.ToString(@"hh\:mm\:ss");
+            StatusMessage = $"{distance} | {duration} (Auto)";
+
+            var points = _autoDetection.Points;
+            var lastPoint = points.Count > 0 ? points[^1] : null;
+            StatusDetail = lastPoint is not null ? $"GPS accuracy: \u00B1{lastPoint.Accuracy:F0}m" : "Waiting for GPS...";
+            IsStatusDetailVisible = true;
+            return;
+        }
+
         if (_tracker.State != RideState.Recording) return;
 
-        var distanceM = _tracker.DistanceMeters;
-        var distance = distanceM >= 1000
-            ? $"{distanceM / 1000.0:F2} km"
-            : $"{distanceM:F0} m";
+        var distM = _tracker.DistanceMeters;
+        var dist = distM >= 1000
+            ? $"{distM / 1000.0:F2} km"
+            : $"{distM:F0} m";
 
-        var duration = _tracker.Duration.ToString(@"hh\:mm\:ss");
-        StatusMessage = $"{distance} | {duration}";
+        var dur = _tracker.Duration.ToString(@"hh\:mm\:ss");
+        StatusMessage = $"{dist} | {dur}";
 
-        var lastPoint = _tracker.Points.Count > 0 ? _tracker.Points[^1] : null;
-        StatusDetail = lastPoint is not null ? $"GPS accuracy: \u00B1{lastPoint.Accuracy:F0}m" : "Waiting for GPS...";
+        var lp = _tracker.Points.Count > 0 ? _tracker.Points[^1] : null;
+        StatusDetail = lp is not null ? $"GPS accuracy: \u00B1{lp.Accuracy:F0}m" : "Waiting for GPS...";
         IsStatusDetailVisible = true;
+    }
+
+    private void OnAutoDetectionStateChanged(AutoDetectionState state)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            UpdateAutoDetectionDisplay();
+
+            if (state == AutoDetectionState.Recording)
+            {
+                _isAutoRecording = true;
+                IsRecording = true;
+                IsSyncVisible = false;
+                StatusMessage = "Auto-recording ride...";
+            }
+            else if (state == AutoDetectionState.Finalizing)
+            {
+                StatusMessage = "Ride may have ended, waiting...";
+            }
+            else if (state == AutoDetectionState.Idle && _isAutoRecording)
+            {
+                _isAutoRecording = false;
+                IsRecording = false;
+                IsStatusDetailVisible = false;
+            }
+        });
+    }
+
+    private void OnAutoDetectionStatusMessage(string message)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (_autoDetection.State != AutoDetectionState.Disabled && !IsRecording)
+            {
+                StatusMessage = message;
+            }
+        });
+    }
+
+    private void UpdateAutoDetectionDisplay()
+    {
+        var state = _autoDetection.State;
+        IsAutoDetectionStatusVisible = state != AutoDetectionState.Disabled;
+
+        switch (state)
+        {
+            case AutoDetectionState.Idle:
+                AutoDetectionStatusText = "Auto-detection active";
+                AutoDetectionDotColor = Colors.LimeGreen;
+                break;
+            case AutoDetectionState.Confirming:
+                AutoDetectionStatusText = "Cycling detected, confirming...";
+                AutoDetectionDotColor = Colors.Orange;
+                break;
+            case AutoDetectionState.Recording:
+                AutoDetectionStatusText = "Auto-recording (Auto)";
+                AutoDetectionDotColor = Colors.Red;
+                break;
+            case AutoDetectionState.Finalizing:
+                AutoDetectionStatusText = "Finalizing ride...";
+                AutoDetectionDotColor = Colors.Orange;
+                break;
+            default:
+                AutoDetectionStatusText = "";
+                break;
+        }
     }
 
     public void Dispose()
     {
         _timer?.Stop();
         _upload.SyncStateChanged -= OnSyncStateChanged;
+        _autoDetection.StateChanged -= OnAutoDetectionStateChanged;
+        _autoDetection.StatusMessage -= OnAutoDetectionStatusMessage;
     }
 }

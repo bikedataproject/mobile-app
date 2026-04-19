@@ -16,4 +16,7 @@ public sealed class RideRecord
     public string TrackPointsJson { get; set; } = string.Empty;
 
     public bool IsUploaded { get; set; }
+
+    /// <summary>"manual" or "auto"</summary>
+    public string Source { get; set; } = "manual";
 }

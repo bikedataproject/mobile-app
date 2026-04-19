@@ -17,9 +17,11 @@ public class LocationForegroundService : Service
     {
         CreateNotificationChannel();
 
+        var notificationText = intent?.GetStringExtra("notification_text") ?? "Recording ride...";
+
         var builder = new NotificationCompat.Builder(this, ChannelId);
         builder.SetContentTitle("Bike Data Project");
-        builder.SetContentText("Recording ride...");
+        builder.SetContentText(notificationText);
         builder.SetSmallIcon(Resource.Mipmap.appicon);
         builder.SetOngoing(true);
         builder.SetCategory(NotificationCompat.CategoryService);

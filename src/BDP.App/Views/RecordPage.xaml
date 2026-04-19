@@ -16,20 +16,49 @@
     <Grid RowDefinitions="Auto,*,Auto"
           Padding="32,0">
 
-        <!-- Top: bicycle logo + title -->
-        <VerticalStackLayout Grid.Row="0"
-                             HorizontalOptions="Center"
-                             Spacing="12"
-                             Margin="0,60,0,0">
-            <Image Source="bicycle.png"
-                   HeightRequest="90"
-                   HorizontalOptions="Center" />
-            <Label Text="Bike Data Project"
-                   TextColor="White"
+        <!-- Top: bicycle logo + title + settings gear -->
+        <Grid Grid.Row="0"
+              Margin="0,60,0,0">
+            <VerticalStackLayout HorizontalOptions="Center"
+                                 Spacing="12">
+                <Image Source="bicycle.png"
+                       HeightRequest="90"
+                       HorizontalOptions="Center" />
+                <Label Text="Bike Data Project"
+                       TextColor="White"
+                       FontSize="28"
+                       FontAttributes="Bold"
+                       HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+
+            <!-- Settings gear icon -->
+            <Label Text="&#x2699;"
                    FontSize="28"
-                   FontAttributes="Bold"
-                   HorizontalTextAlignment="Center" />
-        </VerticalStackLayout>
+                   TextColor="#999"
+                   HorizontalOptions="End"
+                   VerticalOptions="Start"
+                   Padding="8">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnSettingsTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+        </Grid>
+
+        <!-- Auto-detection status indicator -->
+        <HorizontalStackLayout Grid.Row="0"
+                                HorizontalOptions="Center"
+                                VerticalOptions="End"
+                                Spacing="6"
+                                Margin="0,8"
+                                IsVisible="{Binding IsAutoDetectionStatusVisible}">
+            <Ellipse Fill="{Binding AutoDetectionDotColor}"
+                     WidthRequest="8" HeightRequest="8"
+                     VerticalOptions="Center" />
+            <Label Text="{Binding AutoDetectionStatusText}"
+                   TextColor="#999"
+                   FontSize="12"
+                   VerticalTextAlignment="Center" />
+        </HorizontalStackLayout>
 
         <!-- Center: big round record/stop button with shadow -->
         <Grid Grid.Row="1"
