@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:BDP.App.ViewModels"
+             x:Class="BDP.App.Views.DeviceRidesPage"
+             x:DataType="vm:DeviceRidesViewModel"
+             BackgroundColor="#212529"
+             Title="Rides">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto"
+          Padding="32,0">
+
+        <Label Grid.Row="0"
+               Text="{Binding DeviceName}"
+               TextColor="White"
+               FontSize="24"
+               FontAttributes="Bold"
+               HorizontalTextAlignment="Center"
+               Margin="0,60,0,0" />
+
+        <Label Grid.Row="1"
+               Text="{Binding Summary}"
+               TextColor="#999"
+               FontSize="13"
+               HorizontalTextAlignment="Center"
+               Margin="0,8,0,16" />
+
+        <CollectionView Grid.Row="2"
+                         ItemsSource="{Binding Rides}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:RideDisplayItem">
+                    <Frame BackgroundColor="#2a2e33"
+                           BorderColor="Transparent"
+                           CornerRadius="12"
+                           Padding="16"
+                           Margin="0,4">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="4">
+                            <Label Grid.Row="0" Grid.Column="0"
+                                   Text="{Binding Date}"
+                                   TextColor="White"
+                                   FontSize="16" />
+                            <Label Grid.Row="0" Grid.Column="1"
+                                   Text="{Binding Distance}"
+                                   TextColor="White"
+                                   FontSize="16"
+                                   FontAttributes="Bold" />
+                            <Label Grid.Row="1" Grid.Column="0"
+                                   Text="{Binding Duration}"
+                                   TextColor="#999"
+                                   FontSize="13" />
+                            <Label Grid.Row="1" Grid.Column="1"
+                                   Text="{Binding Points}"
+                                   TextColor="#666"
+                                   FontSize="13" />
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Label Grid.Row="3"
+               Text="Back"
+               TextColor="#ef4823"
+               FontSize="13"
+               HorizontalTextAlignment="Center"
+               TextDecorations="Underline"
+               Margin="0,8,0,48">
+            <Label.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnBackTapped" />
+            </Label.GestureRecognizers>
+        </Label>
+
+    </Grid>
+</ContentPage>

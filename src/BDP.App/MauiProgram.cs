@@ -28,14 +28,20 @@ public static class MauiProgram
         builder.Services.AddSingleton<ILocationService, LocationService>();
         builder.Services.AddSingleton<IRideTracker, RideTracker>();
         builder.Services.AddSingleton<UploadService>();
+        builder.Services.AddSingleton<ITrackerSyncService, TrackerSyncService>();
+        builder.Services.AddSingleton<TrackerAutoSyncService>();
 
         // ViewModels
         builder.Services.AddTransient<LoginViewModel>();
         builder.Services.AddSingleton<RecordViewModel>();
+        builder.Services.AddTransient<TrackerSyncViewModel>();
+        builder.Services.AddTransient<DeviceRidesViewModel>();
 
         // Pages
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddSingleton<RecordPage>();
+        builder.Services.AddTransient<TrackerSyncPage>();
+        builder.Services.AddTransient<DeviceRidesPage>();
 
         return builder.Build();
     }

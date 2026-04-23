@@ -16,4 +16,16 @@
                   Shell.TabBarIsVisible="False"
                   Shell.NavBarIsVisible="False" />
 
+    <!-- Tracker sync -->
+    <ShellContent Route="tracker"
+                  ContentTemplate="{DataTemplate views:TrackerSyncPage}"
+                  Shell.TabBarIsVisible="False"
+                  Shell.NavBarIsVisible="False" />
+
+    <!-- Device rides -->
+    <ShellContent Route="device-rides"
+                  ContentTemplate="{DataTemplate views:DeviceRidesPage}"
+                  Shell.TabBarIsVisible="False"
+                  Shell.NavBarIsVisible="False" />
+
 </Shell>

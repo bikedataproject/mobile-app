@@ -16,4 +16,5 @@ public sealed class RideRecord
     public string TrackPointsJson { get; set; } = string.Empty;
 
     public bool IsUploaded { get; set; }
+    public int? TrackerId { get; set; }
 }

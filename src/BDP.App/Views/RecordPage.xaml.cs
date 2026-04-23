@@ -22,4 +22,9 @@ public partial class RecordPage : ContentPage
     {
         await Launcher.Default.OpenAsync("https://www.bikedataproject.org/share-data");
     }
+
+    private async void OnTrackerSyncTapped(object? sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync("//tracker");
+    }
 }

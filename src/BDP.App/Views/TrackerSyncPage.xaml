@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:BDP.App.ViewModels"
+             xmlns:conv="clr-namespace:BDP.App.Converters"
+             x:Class="BDP.App.Views.TrackerSyncPage"
+             x:DataType="vm:TrackerSyncViewModel"
+             BackgroundColor="#212529"
+             Title="Devices">
+
+    <ContentPage.Resources>
+        <conv:InvertBoolConverter x:Key="InvertBool" />
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto"
+          Padding="32,0">
+
+        <!-- Top -->
+        <VerticalStackLayout Grid.Row="0"
+                             HorizontalOptions="Center"
+                             Spacing="12"
+                             Margin="0,60,0,0">
+            <Label Text="Devices"
+                   TextColor="White"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalTextAlignment="Center" />
+        </VerticalStackLayout>
+
+        <!-- Center -->
+        <VerticalStackLayout Grid.Row="1"
+                             VerticalOptions="Center"
+                             Spacing="20">
+
+            <!-- Paired device card -->
+            <Frame IsVisible="{Binding HasTracker}"
+                   BackgroundColor="#2a2e33"
+                   BorderColor="Transparent"
+                   CornerRadius="16"
+                   Padding="20">
+                <Frame.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnDeviceTapped" />
+                </Frame.GestureRecognizers>
+                <Grid RowDefinitions="Auto,Auto,Auto"
+                      ColumnDefinitions="*,Auto"
+                      RowSpacing="6">
+
+                    <Label Grid.Row="0" Grid.Column="0"
+                           Text="{Binding DeviceName}"
+                           TextColor="White"
+                           FontSize="18"
+                           FontAttributes="Bold" />
+
+                    <Label Grid.Row="1" Grid.Column="0"
+                           Text="{Binding TrackerStatus}"
+                           TextColor="#4CAF50"
+                           FontSize="14">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding TrackerStatus}" Value="Connected">
+                                <Setter Property="TextColor" Value="#999" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Label" Binding="{Binding TrackerStatus}" Value="Not in range">
+                                <Setter Property="TextColor" Value="#666" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Label" Binding="{Binding TrackerStatus}" Value="Acquiring GPS...">
+                                <Setter Property="TextColor" Value="#FFA726" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Label" Binding="{Binding TrackerStatus}" Value="Paused">
+                                <Setter Property="TextColor" Value="#FFA726" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+
+                    <Label Grid.Row="2" Grid.Column="0"
+                           Text="{Binding LastSynced, StringFormat='Last synced: {0}'}"
+                           TextColor="#666"
+                           FontSize="13" />
+
+                    <Label Grid.Row="0" Grid.Column="1"
+                           Grid.RowSpan="3"
+                           Text="Remove"
+                           TextColor="#666"
+                           FontSize="13"
+                           VerticalOptions="Center"
+                           TextDecorations="Underline">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding RemoveTrackerCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </Grid>
+            </Frame>
+
+            <!-- Pair button -->
+            <Button Text="{Binding PairButtonText}"
+                    Command="{Binding PairNewCommand}"
+                    IsVisible="{Binding HasTracker, Converter={StaticResource InvertBool}}"
+                    BackgroundColor="#ef4823"
+                    TextColor="White"
+                    FontSize="18"
+                    HeightRequest="56"
+                    CornerRadius="28" />
+
+        </VerticalStackLayout>
+
+        <!-- Bottom -->
+        <VerticalStackLayout Grid.Row="2"
+                             HorizontalOptions="Center"
+                             Spacing="8"
+                             Margin="0,0,0,48">
+
+            <Label Text="{Binding Status}"
+                   TextColor="#999"
+                   FontSize="14"
+                   HorizontalTextAlignment="Center" />
+
+            <Label Text="Back"
+                   TextColor="#ef4823"
+                   FontSize="13"
+                   HorizontalTextAlignment="Center"
+                   TextDecorations="Underline"
+                   Margin="0,8,0,0">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+        </VerticalStackLayout>
+
+    </Grid>
+</ContentPage>

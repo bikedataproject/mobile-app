@@ -14,6 +14,7 @@ public sealed class DatabaseService : IDatabaseService
         var dbPath = Path.Combine(FileSystem.AppDataDirectory, "rides.db");
         _db = new SQLiteAsyncConnection(dbPath);
         await _db.CreateTableAsync<RideRecord>();
+        await _db.CreateTableAsync<PairedTracker>();
         return _db;
     }
 
@@ -72,5 +73,35 @@ public sealed class DatabaseService : IDatabaseService
     {
         var db = await GetConnectionAsync();
         await db.DeleteAsync<RideRecord>(id);
+    }
+
+    public async Task<List<RideRecord>> GetRidesByTrackerAsync(int trackerId)
+    {
+        var db = await GetConnectionAsync();
+        return await db.Table<RideRecord>()
+            .Where(r => r.TrackerId == trackerId)
+            .OrderByDescending(r => r.StartTime)
+            .ToListAsync();
+    }
+
+    public async Task<PairedTracker?> GetTrackerAsync()
+    {
+        var db = await GetConnectionAsync();
+        return await db.Table<PairedTracker>().FirstOrDefaultAsync();
+    }
+
+    public async Task SaveTrackerAsync(PairedTracker tracker)
+    {
+        var db = await GetConnectionAsync();
+        if (tracker.Id == 0)
+            await db.InsertAsync(tracker);
+        else
+            await db.UpdateAsync(tracker);
+    }
+
+    public async Task DeleteTrackerAsync()
+    {
+        var db = await GetConnectionAsync();
+        await db.DeleteAllAsync<PairedTracker>();
     }
 }

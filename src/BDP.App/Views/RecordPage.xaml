@@ -94,6 +94,18 @@
                        VerticalTextAlignment="Center" />
             </HorizontalStackLayout>
 
+            <!-- Tracker sync link -->
+            <Label Text="Manage devices"
+                   TextColor="#ef4823"
+                   FontSize="13"
+                   HorizontalTextAlignment="Center"
+                   TextDecorations="Underline"
+                   IsVisible="{Binding IsRecording, Converter={StaticResource InvertBool}}">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnTrackerSyncTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+
             <!-- Website link -->
             <Label IsVisible="{Binding IsSyncVisible}"
                    TextColor="#ef4823"

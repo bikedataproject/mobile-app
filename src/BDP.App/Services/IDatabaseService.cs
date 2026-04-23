@@ -11,4 +11,8 @@ public interface IDatabaseService
     Task<List<RideRecord>> GetPendingUploadsAsync();
     Task MarkUploadedAsync(int id);
     Task DeleteRideAsync(int id);
+    Task<List<RideRecord>> GetRidesByTrackerAsync(int trackerId);
+    Task<PairedTracker?> GetTrackerAsync();
+    Task SaveTrackerAsync(PairedTracker tracker);
+    Task DeleteTrackerAsync();
 }
