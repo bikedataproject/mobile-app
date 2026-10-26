@@ -41,7 +41,7 @@
                 <Frame.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnDeviceTapped" />
                 </Frame.GestureRecognizers>
-                <Grid RowDefinitions="Auto,Auto,Auto"
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto"
                       ColumnDefinitions="*,Auto"
                       RowSpacing="6">
 
@@ -75,6 +75,26 @@
                            Text="{Binding LastSynced, StringFormat='Last synced: {0}'}"
                            TextColor="#666"
                            FontSize="13" />
+
+                    <Label Grid.Row="3" Grid.Column="0"
+                           Text="{Binding BatteryStatus, StringFormat='Battery: {0}'}"
+                           IsVisible="{Binding HasBattery}"
+                           TextColor="#666"
+                           FontSize="13">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding BatteryIsLow}" Value="True">
+                                <Setter Property="TextColor" Value="#FFA726" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+
+                    <Label Grid.Row="4" Grid.Column="0"
+                           Grid.ColumnSpan="2"
+                           Text="{Binding BatteryWarning}"
+                           IsVisible="{Binding BatteryIsLow}"
+                           TextColor="#FFA726"
+                           FontSize="13"
+                           LineBreakMode="WordWrap" />
 
                     <Label Grid.Row="0" Grid.Column="1"
                            Grid.RowSpan="3"

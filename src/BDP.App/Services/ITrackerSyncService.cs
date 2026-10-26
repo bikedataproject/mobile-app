@@ -19,5 +19,6 @@ public interface ITrackerSyncService
     Task SeekAsync(int index);
     Task ClearDeviceAsync();
     Task<string> GetTrackerStateAsync();
+    Task<TrackerBattery?> GetBatteryAsync();
     Task DisconnectAsync();
 }

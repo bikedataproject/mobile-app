@@ -20,6 +20,8 @@ public sealed class TrackerSyncService : ITrackerSyncService
     private const string StatusCharUuid = "b2c3d4e5-2345-6789-abcd-ef0123456789";
     private const string StateCharUuid = "c3d4e5f6-3456-789a-bcde-f01234567890";
     private const string SeekCharUuid = "d4e5f607-4567-89ab-cdef-012345678901";
+    // Not gated on pairing in the firmware — carries no location data.
+    private const string BatteryCharUuid = "c9dae1f2-9abc-def0-1234-567890123456";
     private const string KeyStorageKey = "tracker_enc_key";
 
     // Epoch base: 2000-01-01 00:00:00 UTC
@@ -38,6 +40,7 @@ public sealed class TrackerSyncService : ITrackerSyncService
     private ICharacteristic? _statusChar;
     private ICharacteristic? _stateChar;
     private ICharacteristic? _seekChar;
+    private ICharacteristic? _batteryChar;
     private byte[]? _encKey;
     private EventHandler<Plugin.BLE.Abstractions.EventArgs.DeviceEventArgs>? _scanHandler;
 
@@ -156,6 +159,8 @@ public sealed class TrackerSyncService : ITrackerSyncService
             _statusChar = await _service.GetCharacteristicAsync(Guid.Parse(StatusCharUuid));
             _stateChar = await _service.GetCharacteristicAsync(Guid.Parse(StateCharUuid));
             _seekChar = await _service.GetCharacteristicAsync(Guid.Parse(SeekCharUuid));
+            // Older firmware has no battery characteristic — stays null, reads report unavailable.
+            _batteryChar = await _service.GetCharacteristicAsync(Guid.Parse(BatteryCharUuid));
 
             if (_statusChar is not null)
             {
@@ -306,6 +311,13 @@ public sealed class TrackerSyncService : ITrackerSyncService
             {
                 var decrypted = Decrypt(data);
                 var batch = ParseBatch(decrypted);
+                // A batch that decodes to nothing would never advance the device cursor,
+                // so treating it as recoverable would spin here forever.
+                if (batch.Count == 0)
+                {
+                    SetStatus("Undecodable batch — wrong key?");
+                    break;
+                }
                 allPoints.AddRange(batch);
                 progress?.Report(allPoints.Count);
             }
@@ -362,6 +374,48 @@ public sealed class TrackerSyncService : ITrackerSyncService
         return Encoding.UTF8.GetString(bytes.data);
     }
 
+    /// <summary>
+    /// Reads the battery characteristic. Returns null if the firmware does not expose it.
+    /// Wire format is a flat key=value line: "avail=1 mv=4426 pct=85 low=0 crit=0".
+    /// </summary>
+    public async Task<TrackerBattery?> GetBatteryAsync()
+    {
+        if (_batteryChar is null) return null;
+
+        string text;
+        try
+        {
+            var bytes = await _batteryChar.ReadAsync();
+            text = Encoding.UTF8.GetString(bytes.data);
+        }
+        catch
+        {
+            return null;
+        }
+
+        var fields = new Dictionary<string, string>();
+        foreach (var token in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var eq = token.IndexOf('=');
+            if (eq > 0) fields[token[..eq]] = token[(eq + 1)..];
+        }
+
+        int Field(string name) =>
+            fields.TryGetValue(name, out var v) &&
+            int.TryParse(v, NumberStyles.Integer, CultureInfo.InvariantCulture, out var n) ? n : 0;
+
+        // avail=0 means no divider is fitted, so mv/pct are meaningless rather than zero.
+        if (Field("avail") != 1) return null;
+
+        return new TrackerBattery
+        {
+            Millivolts = Field("mv"),
+            Percent = Field("pct"),
+            IsLow = Field("low") == 1,
+            IsCritical = Field("crit") == 1
+        };
+    }
+
     public async Task DisconnectAsync()
     {
         if (_device is not null)
@@ -376,6 +430,7 @@ public sealed class TrackerSyncService : ITrackerSyncService
             _statusChar = null;
             _stateChar = null;
             _seekChar = null;
+            _batteryChar = null;
         }
 
         NeedsPairing = false;
